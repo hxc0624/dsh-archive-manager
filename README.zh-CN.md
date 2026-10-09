@@ -1,26 +1,22 @@
-> **hxc0624 个人定制版**：保留紧凑居中的侧栏删除弹窗，更新由个人 Fork 的 GitHub Releases 提供。[自主维护与发布说明](FORK.md) · [下载定制版](https://github.com/hxc0624/dsh-archive-manager/releases)
+> **HXC DSH Toolkit 1.1.0（DSH 增强工具箱）**：提供会话管理、归档检索和交互增强，采用独立版本号。[自主维护与发布说明](FORK.md) · [下载工具箱](https://github.com/hxc0624/dsh-archive-manager/releases)
 >
 > 上游为 [MichengAI/dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager)，沿用 Apache-2.0 许可证。此仓库的定制改动见更新日志。
 
-<p align="center">
-  <img src="assets/branding/dsh-banner.webp" alt="DSH Archive Manager" width="100%">
-</p>
-
 <div align="center">
 
-# DSH Archive Manager
+# HXC DSH Toolkit
 
-  **在 DeepSeek Harness 中安全管理已归档会话**
+  **DSH 增强工具箱：会话管理与交互增强**
 
   [English](README.md) · [更新日志](CHANGELOG.zh-CN.md) · [Apache-2.0](LICENSE)
 
   [![许可证：Apache-2.0](https://img.shields.io/badge/许可证-Apache--2.0-blue.svg)](LICENSE)
-  [![个人版本](https://img.shields.io/github/v/release/hxc0624/dsh-archive-manager)](https://github.com/hxc0624/dsh-archive-manager/releases)
-  [![DSH Web Plugin](https://img.shields.io/badge/DSH%20Web-Plugin-0f766e.svg)](https://github.com/MichengAI/dsh-archive-manager)
+  [![工具箱版本](https://img.shields.io/github/v/release/hxc0624/dsh-archive-manager)](https://github.com/hxc0624/dsh-archive-manager/releases)
+  [![DSH Web Plugin](https://img.shields.io/badge/DSH%20Web-Plugin-0f766e.svg)](https://github.com/hxc0624/dsh-archive-manager)
   [![DSH 支持至 0.2.0-rc.2](https://img.shields.io/badge/DSH-%E6%94%AF%E6%8C%81%E8%87%B3%200.2.0--rc.2-2563eb.svg)](#前置条件)
 </div>
 
-> DSH Archive Manager 是社区维护的 DeepSeek Harness（DSH）插件，并非 DeepSeek AI 官方产品。
+> HXC DSH Toolkit 是社区维护的 DeepSeek Harness（DSH）插件，并非 DeepSeek AI 官方产品。
 
 ## 你可以用它做什么
 
@@ -33,7 +29,7 @@
 - **整理重要会话**：收藏常用聊天，预览闲置归档候选，保护收藏与活跃任务。
 - **查看与排障**：不恢复即可快速预览，复制会话 ID／路径，诊断异常并定向修复支持的旧日志。
 
-> 本文对应 1.0.0 版本，完整功能清单与升级边界见[更新日志](CHANGELOG.zh-CN.md)。
+> 本文对应 Toolkit 1.1.0，基于上游 Archive Manager 1.0.16。历史版本见[更新日志](CHANGELOG.zh-CN.md)。已有 `1.0.16-hxc.1` 的更新器不识别独立版本号，首次迁移需要通过 Desktop 自带安装器或 Web CLI 升级，详见[安装与迁移说明](FORK.md#install-and-upgrade)。
 
 ## 异常会话诊断与修复
 
@@ -61,7 +57,7 @@
 
 ## 界面预览
 
-在「设置 → 归档会话 → 已归档」检索、收藏、预览、恢复和清理：
+在「设置 → DSH 增强工具箱 → 已归档」检索、收藏、预览、恢复和清理：
 
 ![已归档会话：统一检索筛选、收藏与恢复](assets/screenshots/archived-sessions.webp)
 
@@ -86,7 +82,7 @@
 把下面这段话发给能执行本机终端命令的 Agent：
 
 ```text
-请将 https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz 安装到本机 DSH 的 web profile。安装后检查插件配置和个人更新来源，并告诉我如何重新加载 DSH、进入归档会话管理页。
+请将 https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz 安装到本机 DSH 的 web profile。安装后检查插件配置和更新来源，并告诉我如何重新加载 DSH、进入 DSH 增强工具箱。
 ```
 
 ### 手动安装
@@ -100,7 +96,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 dsh plugin --profile web add https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz --registry=https://registry.npmjs.org/
 ```
 
-安装后重启 DSH Web，并按 `Ctrl+Shift+R` 硬刷新浏览器。打开「设置 → 归档会话」即可使用。
+安装后重启 DSH Web，并按 `Ctrl+Shift+R` 硬刷新浏览器。打开「设置 → DSH 增强工具箱」即可使用。
 
 ## 使用
 
@@ -108,7 +104,7 @@ dsh plugin --profile web add https://github.com/hxc0624/dsh-archive-manager/rele
 | --- | --- |
 | 归档一条会话 | 打开侧栏会话菜单，选择「归档会话」 |
 | 归档整个工作区 | 打开工作区菜单，选择归档该工作区的会话 |
-| 查找归档 | 打开「设置 → 归档会话」，选择标题／正文搜索，组合项目、收藏和日期筛选 |
+| 查找归档 | 打开「设置 → DSH 增强工具箱」，选择标题／正文搜索，组合项目、收藏和日期筛选 |
 | 调整排列顺序 | 按更新时间、创建时间、标题、轮次最多／最少排序 |
 | 恢复一条会话 | 点击会话右侧的恢复图标；更多菜单可「恢复打开」 |
 | 归档某个项目或未分组 | 在「未归档」页点击分组右侧“…”菜单，确认归档该组全部聊天；不受搜索筛选影响 |
@@ -151,7 +147,7 @@ dsh plugin --profile web add https://github.com/hxc0624/dsh-archive-manager/rele
 
 ## 更新
 
-在归档管理页标题处点击「检查更新」，来源应为 `hxc0624/dsh-archive-manager`。更新只使用该仓库已发布的定制版，不会自动合并上游。支持的 CLI 或 Desktop 环境可点击更新；其他环境使用手工命令。Desktop 需使用自带安装器，并在安装后完全退出重开。合并上游和发布新版本见 [FORK.md](FORK.md)。
+在 DSH 增强工具箱标题处点击「检查更新」，来源应为 `hxc0624/dsh-archive-manager`，版本使用 Toolkit 的独立版本号。上游改动由维护者合并后发布。支持的 CLI 或 Desktop 环境可点击更新；其他环境使用手工命令。Desktop 需使用自带安装器，并在安装后完全退出重开。合并上游和发布新版本见 [FORK.md](FORK.md)。
 
 ## 常见问题
 
@@ -166,7 +162,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 dsh --profile web --dump-config
 ```
 
-配置中应包含 `ui-workspace-archive-manager`，且不应再禁用官方 `workspace` 或 `session-projection-cache`。若还留着 `archive-manager-host` 的禁用覆盖，可以删掉。DSH 0.1.6+ 上官方 `ui-settings-unarchive-sessions` 应为 `disabled: true`，设置里只保留本插件的「归档会话」。若 profile 的 `cordis.patch.yml` 仍禁用 `workspace`、`session-projection-cache` 或 `ui-workspace`，请移除这些覆盖，再重启。
+配置中应包含 `ui-workspace-archive-manager`，且不应再禁用官方 `workspace` 或 `session-projection-cache`。若还留着 `archive-manager-host` 的禁用覆盖，可以删掉。DSH 0.1.6+ 上官方 `ui-settings-unarchive-sessions` 应为 `disabled: true`，设置里只保留本插件的「DSH 增强工具箱」。若 profile 的 `cordis.patch.yml` 仍禁用 `workspace`、`session-projection-cache` 或 `ui-workspace`，请移除这些覆盖，再重启。
 
 ### 归档和删除有什么区别？
 
@@ -174,9 +170,9 @@ dsh --profile web --dump-config
 
 ### 可以和 Codex UI 一起使用吗？
 
-可以。保留 [Codex UI](https://github.com/MichengAI/dsh-codex-ui) 的侧栏样式和交互，归档管理仍在「设置 → 归档会话」中。
+可以。保留 [Codex UI](https://github.com/MichengAI/dsh-codex-ui) 的侧栏样式和交互，归档管理位于「设置 → DSH 增强工具箱」。
 
-遇到其他问题，请提交 [Issue](https://github.com/MichengAI/dsh-archive-manager/issues)，附上 DSH 与插件版本、复现步骤和错误信息。
+遇到其他问题，请提交 [Issue](https://github.com/hxc0624/dsh-archive-manager/issues)，附上 DSH 与插件版本、复现步骤和错误信息。
 
 ## 从源码安装
 

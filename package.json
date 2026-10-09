@@ -1,8 +1,8 @@
 {
   "name": "@michengai/dsh-archive-manager",
-  "version": "1.0.16-hxc.1",
+  "version": "1.1.0",
   "private": true,
-  "description": "hxc0624 个人定制版：紧凑居中的删除弹窗，使用独立 GitHub 更新渠道。 · Personal fork with a compact centered delete dialog and its own GitHub release channel.",
+  "description": "HXC DSH Toolkit（DSH 增强工具箱）：会话管理、归档检索与交互增强。 · Session management, archive search, and interaction enhancements for DeepSeek Harness.",
   "type": "module",
   "packageManager": "pnpm@11.22.0",
   "engines": {

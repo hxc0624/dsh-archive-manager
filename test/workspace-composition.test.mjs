@@ -47,6 +47,132 @@ const source = (state) => ({ getSnapshot: () => state, subscribe: () => () => {}
 // 夹具不提供它，官方的 apply 根本不会运行，本文件就无法验证组合行为。
 const provideShortcuts = (root) => root.provide("shortcuts", { register: () => () => {}, catalog: source([]) });
 
+// Keep the real navigation reference after the Host has removed the list row.
+// The conversation remains mounted until that reference is explicitly released.
+async function deletedConversationFixture(t) {
+  const root = new Context();
+  const slots = new SlotRegistry(root);
+  const list = { phase: "ready", ids: ["a", "b"], byId: {
+    a: { id: "a", title: "A", retainedBy: {} }, b: { id: "b", title: "B", retainedBy: {} }
+  } };
+  let renderedSession;
+  let renderedReference;
+  const removeRow = id => {
+    delete list.byId[id];
+    list.ids = list.ids.filter(value => value !== id);
+    if (list.current === id) delete list.current;
+  };
+  const sessions = {
+    list: source(list),
+    clear() { delete list.current; renderedSession = undefined; },
+    open(id) { list.current = id; renderedSession = id; },
+    retain(target, { source }) {
+      const id = typeof target === "string" ? target : target.sessionId;
+      list.byId[id].retainedBy[source] = 1;
+      renderedSession = id;
+      const reference = { sessionId: id, release() {
+        if (renderedReference !== reference) return;
+        if (list.byId[id]) delete list.byId[id].retainedBy[source];
+        renderedReference = undefined;
+        renderedSession = undefined;
+      } };
+      renderedReference = reference;
+      return reference;
+    },
+    subagentAddress() {}, refreshSubagents() {},
+    async refresh() {}
+  };
+  const registry = {
+    async deleteSession(id) { removeRow(id); return { ok: true, value: { deleted: true } }; },
+    async deleteArchivedSessions() { throw new Error("Set the batch result in the test"); },
+    async favoriteSessions() { return { ok: true, value: { favoriteSessionIds: [] } }; }
+  };
+  root.provide("locale", { register: () => () => {}, bind: () => key => key });
+  root.provide("sessions", sessions);
+  root.provide("workspaces", { list: source({ phase: "ready", items: [], archivedSessionIds: [] }) });
+  root.provide("remote", { $mount: async () => () => {} });
+  root.provide("remote.workspaceRegistry", registry);
+  root.provide("remote.directoryPicker", {}); root.provide("connection", {}); root.provide("typert", {});
+  root.provide("layout", { beginNavigation: () => new AbortController().signal, selectPanel() {} });
+  provideShortcuts(root);
+  const disposeRoot = slots.register({ name: "root", children: {
+    "sidebar.workspaces": { kind: "single", scope: "root" },
+    "conversation.hero.workspace": { kind: "single", scope: "root" },
+    "settings.section": { kind: "list", scope: "root" }
+  } }, () => null);
+  const stock = root.plugin(official);
+  await stock;
+  const custom = root.plugin(archive);
+  t.after(async () => { await custom.dispose(); await stock.dispose(); disposeRoot(); });
+  await custom;
+  await tick();
+  const navigation = root.get("uiWorkspace");
+  if (typeof navigation?.clearMain !== "function") { t.skip("旧宿主使用 sessions.clear，单独覆盖"); return; }
+  navigation.openSession("a");
+  const actions = slots.entries("settings.section").find(entry => entry.options.id === "archived-sessions").inject();
+  return { actions, navigation, registry, sessions, removeRow, rendered: () => renderedSession };
+}
+
+test("删除当前会话：列表先移除摘要，仍在刷新前卸载正文并清空持久选择", async t => {
+  const env = await deletedConversationFixture(t);
+  if (!env) return;
+  let atRefresh;
+  env.sessions.refresh = async () => {
+    atRefresh = { rendered: env.rendered(), reference: env.navigation.mainReference, selection: env.navigation.selection.getSnapshot() };
+  };
+  await env.actions.deleteSession("a");
+  assert.deepEqual(atRefresh, { rendered: undefined, reference: undefined, selection: {} }, "不能等列表刷新或用户切换才卸载正文");
+  assert.equal(env.rendered(), undefined);
+});
+
+test("删除请求失败保留当前正文，重试成功才清空", async t => {
+  const env = await deletedConversationFixture(t);
+  if (!env) return;
+  const succeed = env.registry.deleteSession;
+  env.registry.deleteSession = async () => ({ ok: false, error: { message: "disk locked" } });
+  await assert.rejects(env.actions.deleteSession("a"), /disk locked/);
+  assert.equal(env.rendered(), "a");
+  env.registry.deleteSession = succeed;
+  await env.actions.deleteSession("a");
+  assert.equal(env.rendered(), undefined);
+});
+
+test("删除其他会话或删除期间切换会话，不清空用户正在看的正文", async t => {
+  const env = await deletedConversationFixture(t);
+  if (!env) return;
+  let finish;
+  env.registry.deleteSession = id => new Promise(resolve => {
+    finish = () => { env.removeRow(id); resolve({ ok: true, value: { deleted: true } }); };
+  });
+  const pending = env.actions.deleteSession("a");
+  assert.equal(env.rendered(), "a", "成功确认前保留正文");
+  env.navigation.openSession("b");
+  finish();
+  await pending;
+  assert.equal(env.rendered(), "b");
+  const other = env.actions.deleteSession("a");
+  finish();
+  await other;
+  assert.equal(env.rendered(), "b");
+});
+
+test("批量删除只清空成功删除或已不存在的当前会话，失败项继续显示", async t => {
+  const env = await deletedConversationFixture(t);
+  if (!env) return;
+  env.registry.deleteArchivedSessions = async () => ({ ok: true, value: {
+    requestedSessionIds: ["a", "b"], deletedSessionIds: ["b"], skippedSessionIds: [], failures: [{ sessionId: "a", message: "locked" }]
+  } });
+  const partial = await env.actions.deleteArchivedSessions({ scope: "all" });
+  assert.equal(partial.failures.length, 1);
+  assert.equal(env.rendered(), "a");
+  env.registry.deleteArchivedSessions = async () => {
+    env.removeRow("a");
+    return { ok: true, value: { requestedSessionIds: ["a"], deletedSessionIds: [], skippedSessionIds: ["a"], failures: [] } };
+  };
+  await env.actions.deleteArchivedSessions({ scope: "all" });
+  assert.equal(env.rendered(), undefined);
+});
+
 test("归档诊断读取没有列表摘要的 ID", async () => {
   const effects = [], calls = [];
   const hooks = { ...statics.react,

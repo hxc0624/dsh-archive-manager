@@ -15,13 +15,13 @@ test("归档入口注册在设置的连接器之后，并移除旧的视图选�
   assert.doesNotMatch(client, /viewOptions\.showArchived/);
 });
 
-test("设置菜单与页面大标题统一命名为归档会话", async () => {
+test("设置页使用工具箱名称，归档状态仍显示会话标签", async () => {
   const client = await readFile(clientPath, "utf8");
 
   assert.match(client, /"archived\.badge": "归档会话"/);
-  assert.match(client, /"archives\.title": "归档会话"/);
+  assert.match(client, /"archives\.title": "DSH 增强工具箱"/);
   assert.match(client, /"archived\.badge": "Archived sessions"/);
-  assert.match(client, /"archives\.title": "Archived sessions"/);
+  assert.match(client, /"archives\.title": "HXC DSH Toolkit"/);
   assert.doesNotMatch(client, /"archives\.title": "已归档的聊天"/);
 });
 
@@ -46,10 +46,10 @@ test("归档设置页在标题区提供项目与反馈入口，不混入批量�
   const client = await readFile(clientPath, "utf8");
 
   assert.match(client, /className: "dsham_settingsTitleRow"/);
-  assert.match(client, /href: "https:\/\/github\.com\/MichengAI\/dsh-archive-manager"/);
+  assert.match(client, /href: "https:\/\/github\.com\/hxc0624\/dsh-archive-manager"/);
   assert.match(client, /function GithubMark16\(\)/);
   assert.match(client, /GithubMark16, \{\}/);
-  assert.match(client, /href: "https:\/\/github\.com\/MichengAI\/dsh-archive-manager\/issues"/);
+  assert.match(client, /href: "https:\/\/github\.com\/hxc0624\/dsh-archive-manager\/issues"/);
   assert.match(client, /IconListPenOutline16/);
   assert.doesNotMatch(client, /IconDislikeOutline16/);
   assert.match(client, /target: "_blank", rel: "noreferrer"/);
@@ -58,7 +58,7 @@ test("归档设置页在标题区提供项目与反馈入口，不混入批量�
   assert.match(client, /"archives\.feedback": "问题反馈"/);
   assert.match(client, /"archives\.feedback": "Issues"/);
   assert.equal((client.match(/className: "dsham_settingsTitleRow"/g) ?? []).length, 1);
-  assert.equal((client.match(/href: "https:\/\/github\.com\/MichengAI\/dsh-archive-manager\/issues"/g) ?? []).length, 1);
+  assert.equal((client.match(/href: "https:\/\/github\.com\/hxc0624\/dsh-archive-manager\/issues"/g) ?? []).length, 1);
   assert.doesNotMatch(client, /dsham_settingsHeaderActions[\s\S]{0,700}archives\.viewProject/);
 });
 
@@ -106,11 +106,11 @@ test("老归档缺少投影时由宿主重建，并在新老客户端会话服�
   assert.match(client, /repaired archived projections but session list refresh failed/);
 });
 
-test("归档设置页收紧顶部留白，侧栏入口使用简短归档标签", async () => {
+test("归档设置页收紧顶部留白，设置入口使用工具箱名称", async () => {
   const client = await readFile(clientPath, "utf8");
 
   assert.match(client, /margin:0 auto/);
-  assert.match(client, /label: \(\) => ctx\.locale\.bind\(NS\)\("archived\.badge"\)/);
+  assert.match(client, /label: \(\) => ctx\.locale\.bind\(NS\)\("archives\.title"\)/);
 });
 
 test("归档设置页下拉菜单不强制宿主主题", async () => {

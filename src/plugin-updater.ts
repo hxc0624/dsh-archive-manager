@@ -3,7 +3,7 @@ import type { Context } from "@deepseek-ai/cordis";
 import { symbols } from "@deepseek-ai/cordis";
 import type {} from "@deepseek-ai/dsh-host-webserver";
 import { record } from "./contracts.js";
-import { createLatestReleaseReader, releaseAssetUrl, RELEASE_REPOSITORY } from "./release-channel.js";
+import { createLatestReleaseReader, isNewerVersion, releaseAssetUrl, RELEASE_REPOSITORY } from "./release-channel.js";
 interface DesktopPnpm { runPlugin(args: string[], directory: string): { done: Promise<{ exitCode: number }> } }
 interface PackageManagerLaunch { command: string; args: readonly string[]; env?: NodeJS.ProcessEnv }
 interface PluginManagerInstall { installBundle(spec: string): Promise<{ application?: string; error?: { message?: string }; packageResult?: { output?: string } }> }
@@ -178,41 +178,6 @@ function shouldNotifyParent(target: UpdateRuntime, send: NodeJS.Process["send"] 
 }
 function runtime(ctx: Context): UpdateRuntime {
   return resolveUpdateRuntime(ctx);
-}
-function parseSemver(value: string) {
-  const match = /^v?(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/.exec(value);
-  if (match === null) return void 0;
-  return { core: [Number(match[1]), Number(match[2]), Number(match[3])], prerelease: match[4]?.split(".") ?? [] };
-}
-function isNewerVersion(currentValue: string, candidateValue: string) {
-  const current = parseSemver(currentValue);
-  const candidate = parseSemver(candidateValue);
-  if (current === void 0 || candidate === void 0) return false;
-  for (let index = 0; index < 3; index += 1) {
-    if (candidate.core[index] !== current.core[index]) return candidate.core[index] > current.core[index];
-  }
-  return comparePrerelease(candidate.prerelease, current.prerelease) > 0;
-}
-function comparePrerelease(left: readonly string[], right: readonly string[]) {
-  if (left.length === 0 || right.length === 0) return left.length === right.length ? 0 : left.length === 0 ? 1 : -1;
-  const length = Math.max(left.length, right.length);
-  for (let index = 0; index < length; index += 1) {
-    const a = left[index];
-    const b = right[index];
-    if (a === void 0 || b === void 0) return a === b ? 0 : a === void 0 ? -1 : 1;
-    if (a === b) continue;
-    const aNumeric = /^\d+$/.test(a);
-    const bNumeric = /^\d+$/.test(b);
-    if (aNumeric && bNumeric) {
-      const aNumber = BigInt(a);
-      const bNumber = BigInt(b);
-      if (aNumber !== bNumber) return aNumber > bNumber ? 1 : -1;
-      continue;
-    }
-    if (aNumeric !== bNumeric) return aNumeric ? -1 : 1;
-    return a > b ? 1 : -1;
-  }
-  return 0;
 }
 async function currentVersion(manifestUrl: URL) {
   const value = record(JSON.parse(await readFile(manifestUrl, "utf8")));

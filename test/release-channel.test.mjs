@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { resolve } from "node:path";
-import { createLatestReleaseReader, isForkVersion, releaseAssetUrl, releaseVersion, RELEASE_API, RELEASE_ASSET, RELEASE_REPOSITORY, RELEASES_URL } from "../src/release-channel.ts";
+import { createLatestReleaseReader, isReleaseVersion, isStableVersion, releaseAssetUrl, releaseVersion, RELEASE_API, RELEASE_ASSET, RELEASE_REPOSITORY, RELEASES_URL } from "../src/release-channel.ts";
 import { manualPluginUpdateCommand } from "../src/plugin-update-model.ts";
 import { isNewerVersion, PLUGIN_UPDATE_HEADER, registerPluginUpdater } from "../src/plugin-updater.ts";
 
@@ -10,13 +10,13 @@ const release = (version = "1.0.16-hxc.2") => ({
   assets: [{ name: RELEASE_ASSET, state: "uploaded", size: 1024, browser_download_url: releaseAssetUrl(version) }],
 });
 
-test("only complete personal releases are accepted, including numeric revision ordering", () => {
+test("complete Toolkit and historical personal releases are accepted with numeric version ordering", () => {
   const good = release();
   assert.equal(releaseVersion(good), "1.0.16-hxc.2");
   assert.equal(isNewerVersion("1.0.16-hxc.2", "1.0.16-hxc.10"), true);
   assert.equal(isNewerVersion("1.0.16-hxc.10", "1.0.17-hxc.1"), true);
-  for (const version of ["1.0.16", "1.0.16-rc.1", "1.0.16-hxc.01", "1.0.16-hxc.0", "../../latest"]) {
-    assert.equal(isForkVersion(version), false);
+  for (const version of ["1.0", "01.1.0", "1.1.0+build.1", "1.0.16-rc.1", "1.0.16-hxc.01", "1.0.16-hxc.0", "../../latest"]) {
+    assert.equal(isReleaseVersion(version), false);
     assert.throws(() => releaseAssetUrl(version));
   }
   for (const patch of [
@@ -50,7 +50,24 @@ test("manual commands stay on the personal channel even when checking failed", (
   assert.equal(manualPluginUpdateCommand("desktop", "latest"), `dsh plugin --profile desktop add ${RELEASES_URL}/latest/download/${RELEASE_ASSET} --registry=https://registry.npmjs.org/`);
   assert.match(manualPluginUpdateCommand("web", "1.0.16-hxc.2"), /\/download\/v1\.0\.16-hxc\.2\//);
   assert.throws(() => manualPluginUpdateCommand("desktop; echo injected", "latest"));
-  assert.throws(() => manualPluginUpdateCommand("web", "1.0.17"));
+  assert.match(manualPluginUpdateCommand("desktop", "1.1.0"), /\/download\/v1\.1\.0\//);
+  assert.throws(() => manualPluginUpdateCommand("web", "1.1.0-rc.1"));
+});
+
+test("independent stable versions upgrade legacy installs and keep their repository boundary", () => {
+  for (const version of ["1.1.0", "1.1.1", "1.2.0", "2.0.0"]) {
+    assert.equal(isStableVersion(version), true);
+    assert.equal(releaseVersion(release(version)), version);
+    assert.equal(isNewerVersion("1.0.16-hxc.1", version), true);
+  }
+  assert.equal(isStableVersion("1.0.16-hxc.1"), false);
+  assert.equal(isNewerVersion("1.0.16-hxc.1", "1.0.16"), true);
+  assert.equal(isNewerVersion("1.1.0", "1.0.16-hxc.9"), false);
+  assert.equal(isNewerVersion("1.1.0", "1.1.0"), false);
+  const foreign = release("1.1.0");
+  foreign.html_url = "https://github.com/MichengAI/dsh-archive-manager/releases/tag/v1.1.0";
+  assert.equal(releaseVersion(foreign), undefined);
+  assert.equal(releaseVersion({ ...release("1.1.0"), prerelease: true }), undefined);
 });
 
 function updater(t, fetcher, install = () => ({ done: Promise.resolve({ exitCode: 0 }) })) {
@@ -93,6 +110,22 @@ test("simultaneous updates install a versioned fork asset exactly once", async (
   assert.ok(calls[0].args.includes(releaseAssetUrl("1.0.16-hxc.2")));
   assert.ok(!calls[0].args.some((arg) => arg.startsWith("@michengai/")));
   assert.equal(calls[0].directory, resolve("test-profile"));
+});
+
+test("the installed updater resolves and installs an independent 1.1.0 asset", async t => {
+  const calls = [];
+  const request = updater(t, async () => new Response(JSON.stringify(release("1.1.0"))), args => {
+    calls.push(args);
+    return { done: Promise.resolve({ exitCode: 0 }) };
+  });
+  const status = await request("GET");
+  assert.equal(status.payload.latestVersion, "1.1.0");
+  assert.equal(status.payload.updateAvailable, true);
+  const result = await request();
+  assert.equal(result.code, 200);
+  assert.equal(result.payload.updatedVersion, "1.1.0");
+  assert.equal(calls.length, 1);
+  assert.ok(calls[0].includes(releaseAssetUrl("1.1.0")));
 });
 
 test("lookup failure releases the lock and never installs", async (t) => {

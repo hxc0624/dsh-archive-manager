@@ -1,15 +1,15 @@
-name: Personal GitHub release
+name: HXC DSH Toolkit release
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Personal release tag, for example v1.0.16-hxc.1'
+        description: 'Toolkit stable release tag, for example v1.1.0'
         required: true
         type: string
   push:
     tags:
-      - 'v*-hxc.*'
+      - 'v[0-9]*.[0-9]*.[0-9]*'
 
 # Serialize publication so two versions do not race for Latest.
 concurrency:
@@ -27,7 +27,7 @@ jobs:
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
-      - name: Check out the personal release tag
+      - name: Check out the Toolkit release tag
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}

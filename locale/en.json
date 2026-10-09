@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "Archive Manager",
-    "description": "Archive, restore, favorite, and permanently delete sessions, and diagnose damaged session logs."
+    "title": "HXC DSH Toolkit",
+    "description": "Session management, archive search, bulk organization, and interaction enhancements for DeepSeek Harness."
   }
 }

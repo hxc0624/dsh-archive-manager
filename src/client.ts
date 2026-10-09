@@ -6,7 +6,7 @@ import type { ClientSession, ClientList, ClientWorkspace, WorkspaceSnapshot, Obs
 import { createSessionHealthPanel, healthZh, healthEn } from "./session-health-ui.js";
 import { createDiscoveryTools, discoveryCss, discoveryZh, discoveryEn } from "./archive-discovery-ui.js";
 import { compareTurnCounts, copySessionText, discoveryInvocations, matchesUpdatedRange, validUpdatedRange, sessionDetailCandidates } from "./archive-discovery.js";
-import { allowArchivedNavigation, openArchivedConversation, formatArchiveNavigationError, ArchiveNavigationError, currentSessionId } from "./archive-experience.js";
+import { allowArchivedNavigation, openArchivedConversation, formatArchiveNavigationError, ArchiveNavigationError, currentSessionId, clearDeletedConversation } from "./archive-experience.js";
 import { mirrorDirectoryFlow } from "./directory-flow-slot.js";
 import { observePluginUpdate } from "./plugin-update-ui.js";
 import { DeleteSessionDialog } from "./delete-session-dialog.js";
@@ -692,7 +692,7 @@ export function startArchiveClient(require: HostRequire) {
 					// 设置页使用独立布局容器，避免被 Codex UI 的会话 header 页签适配器识别。
 					className: "dsham_settingsHeader",
 					children: [(0, react_jsx_runtime.jsxs)("div", {
-					children: [(0, react_jsx_runtime.jsxs)("div", { className: "dsham_settingsTitleRow", children: [(0, react_jsx_runtime.jsx)("h2", { children: t("archives.title") }), (0, react_jsx_runtime.jsxs)("div", { className: "dsham_settingsLinks", children: [(0, react_jsx_runtime.jsx)(AntdButton, { size: "small", shape: "default", href: "https://github.com/MichengAI/dsh-archive-manager", target: "_blank", rel: "noreferrer", "aria-label": t("archives.viewProject"), icon: (0, react_jsx_runtime.jsx)(GithubMark16, {}), children: t("archives.viewProject") }), (0, react_jsx_runtime.jsx)(AntdButton, { size: "small", shape: "default", href: "https://github.com/MichengAI/dsh-archive-manager/issues", target: "_blank", rel: "noreferrer", "aria-label": t("archives.feedback"), icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconListPenOutline16, {}), children: t("archives.feedback") })] })] }), (0, react_jsx_runtime.jsx)("p", { className: "dsham_settingsIntro", children: t("archives.description") })]
+					children: [(0, react_jsx_runtime.jsxs)("div", { className: "dsham_settingsTitleRow", children: [(0, react_jsx_runtime.jsx)("h2", { children: t("archives.title") }), (0, react_jsx_runtime.jsxs)("div", { className: "dsham_settingsLinks", children: [(0, react_jsx_runtime.jsx)(AntdButton, { size: "small", shape: "default", href: "https://github.com/hxc0624/dsh-archive-manager", target: "_blank", rel: "noreferrer", "aria-label": t("archives.viewProject"), icon: (0, react_jsx_runtime.jsx)(GithubMark16, {}), children: t("archives.viewProject") }), (0, react_jsx_runtime.jsx)(AntdButton, { size: "small", shape: "default", href: "https://github.com/hxc0624/dsh-archive-manager/issues", target: "_blank", rel: "noreferrer", "aria-label": t("archives.feedback"), icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconListPenOutline16, {}), children: t("archives.feedback") })] })] }), (0, react_jsx_runtime.jsx)("p", { className: "dsham_settingsIntro", children: t("archives.description") })]
 					}), react.createElement("div", tabsShell(busy || unarchivingSessionIds.size > 0, (0, react_jsx_runtime.jsx)(AntdSegmented, {
 					block: true, "aria-label": t("archives.title"), value: archiveTab === "unarchived" ? "unarchived" : "archived", onChange: (value) => switchTab(String(value) === "unarchived" ? "unarchived" : "archived"),
 					options: [{ value: "archived", label: t("archives.tab.archived") }, { value: "unarchived", label: t("archives.tab.unarchived") }]
@@ -3699,8 +3699,8 @@ export function startArchiveClient(require: HostRequire) {
 			"menu.deleteSession": "删除会话",
 			"archived.badge": "归档会话",
 			"archived.notOpenable": "已归档，取消归档后可继续对话",
-			"archives.title": "归档会话",
-			"archives.description": "管理已归档会话，或选择未归档会话进行批量归档。",
+			"archives.title": "DSH 增强工具箱",
+			"archives.description": "会话管理：归档、恢复、搜索和批量整理对话。",
 			"archives.viewProject": "GitHub",
 			"archives.feedback": "问题反馈",
 			"archives.empty": "暂无已归档会话",
@@ -3860,8 +3860,8 @@ export function startArchiveClient(require: HostRequire) {
 			"menu.deleteSession": "Delete session",
 			"archived.badge": "Archived sessions",
 			"archived.notOpenable": "This session is archived. Unarchive it to continue the conversation.",
-			"archives.title": "Archived sessions",
-			"archives.description": "Manage archived sessions or select unarchived sessions to archive in bulk.",
+			"archives.title": "HXC DSH Toolkit",
+			"archives.description": "Manage sessions: archive, restore, search, and organize conversations in bulk.",
 			"archives.viewProject": "GitHub",
 			"archives.feedback": "Issues",
 			"archives.empty": "No archived sessions.",
@@ -4076,8 +4076,8 @@ export function startArchiveClient(require: HostRequire) {
 				packageName: "@michengai/dsh-archive-manager",
 				titleRowSelector: ".dsham_settingsTitleRow",
 				linksSelector: ".dsham_settingsLinks",
-				zhName: "归档会话",
-				enName: "Archived sessions",
+				zhName: "DSH 增强工具箱",
+				enName: "HXC DSH Toolkit",
 				createIcon: createPluginUpdateIcon
 			}), "dsh-archive-manager: plugin update ui");
 			// 侧栏先注册；导航适配等官方 uiWorkspace 出现再绑，否则打开归档会被官方清掉。
@@ -4140,15 +4140,17 @@ export function startArchiveClient(require: HostRequire) {
             const previewArchivedSession: RegistryCalls["previewArchivedSession"] = input => registryCall("previewArchivedSession", input);
             const favoriteSessions = () => registryCall("favoriteSessions");
             const setSessionFavorite: RegistryCalls["setSessionFavorite"] = input => registryCall("setSessionFavorite", input);
+            const deleteOne = async (sessionId: string) => {
+                const registry = ctx.get("remote.workspaceRegistry");
+                if (registry === undefined) throw new Error("archive-manager remote service is unavailable");
+                const result = await registry.deleteSession(sessionId);
+                if (!result.ok) throw new Error(result.error.message);
+                clearDeletedConversation(uiWorkspaceAt(), ctx.sessions, [sessionId]);
+            };
             const organizeBatch = createSessionOrganizer({
 				workspaces: ctx.workspaces.list, sessions: ctx.sessions.list,
 				archive: (id) => ctx.workspaces.archiveSession(id), restore: unarchiveOne,
-				deleteOne: async (id) => {
-					const registry = ctx.get("remote.workspaceRegistry");
-					if (!registry) throw new Error(ctx.locale.bind(NS)("service.unavailable"));
-					const result = await registry.deleteSession(id);
-					if (!result.ok) throw new Error(result.error.message);
-				},
+				deleteOne,
 				getFavorites: favoriteSessions, refresh: () => ctx.sessions.refresh?.(), currentSessionId
 			});
 			const unarchiveSession = async (sessionId: string) => {
@@ -4162,10 +4164,7 @@ export function startArchiveClient(require: HostRequire) {
 				return archiveSessionsViaOfficial(ctx.workspaces, workspace.sessionIds, refreshSessionList);
 			};
 			const deleteSession = async (sessionId: string) => {
-				const registry = ctx.get("remote.workspaceRegistry");
-				if (registry === void 0) throw new Error("archive-manager remote service is unavailable");
-				const result = await registry.deleteSession(sessionId);
-				if (!result.ok) throw new Error(result.error.message);
+				await deleteOne(sessionId);
 				await refreshSessionList();
 			};
 			const archiveSessions = async (sessionIds: string[]) => archiveSessionsViaOfficial(ctx.workspaces, sessionIds, refreshSessionList);
@@ -4179,6 +4178,7 @@ export function startArchiveClient(require: HostRequire) {
 				if (registry === void 0) throw new Error("archive-manager remote service is unavailable");
 				const result = await registry.deleteArchivedSessions(target);
 				if (!result.ok) throw new Error(result.error.message);
+				clearDeletedConversation(uiWorkspaceAt(), ctx.sessions, [...result.value.deletedSessionIds, ...result.value.skippedSessionIds]);
 				const refreshError = await refreshSessionList();
 				return { ...result.value, refreshError };
 			};
@@ -4368,7 +4368,7 @@ export function startArchiveClient(require: HostRequire) {
 				name: "settings.section",
 				id: "archived-sessions",
 				order: 18,
-				label: () => ctx.locale.bind(NS)("archived.badge"),
+				label: () => ctx.locale.bind(NS)("archives.title"),
 				icon: "archive",
 				locale: NS,
 				inject: () => ({

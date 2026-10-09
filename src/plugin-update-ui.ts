@@ -2,7 +2,7 @@ import React from "react";
 import { antdLocaleFromDocument } from "./antd-locale.js";
 import { AntdProvider, Button, Modal, Progress } from "./antd-ui.js";
 import { createUpdateFlow, handlePluginUpdateEscape, manualPluginUpdateCommand, pluginUpdateCopy, ZH, EN, type UpdatePayload } from "./plugin-update-model.js";
-import { isForkVersion, RELEASE_REPOSITORY, RELEASES_URL } from "./release-channel.js";
+import { isReleaseVersion, RELEASE_REPOSITORY, RELEASES_URL } from "./release-channel.js";
 
 interface UpdateUiOptions { endpoint: string; packageName: string; titleRowSelector: string; linksSelector: string; zhName: string; enName: string; createIcon: (name: "refresh" | "download" | "copy" | "close") => HTMLElement }
 
@@ -36,7 +36,7 @@ function ensureStyle() {
 function validPayload(value: unknown): value is UpdatePayload {
 	if (value === null || typeof value !== "object") return false;
 	const item = value as Record<string, unknown>;
-	return typeof item.packageName === "string" && item.releaseRepository === RELEASE_REPOSITORY && typeof item.currentVersion === "string" && typeof item.updateAvailable === "boolean" && typeof item.profileName === "string" && typeof item.canAutoUpdate === "boolean" && typeof item.latestCheckFailed === "boolean" && (item.latestVersion === undefined || typeof item.latestVersion === "string" && isForkVersion(item.latestVersion));
+	return typeof item.packageName === "string" && item.releaseRepository === RELEASE_REPOSITORY && typeof item.currentVersion === "string" && typeof item.updateAvailable === "boolean" && typeof item.profileName === "string" && typeof item.canAutoUpdate === "boolean" && typeof item.latestCheckFailed === "boolean" && (item.latestVersion === undefined || typeof item.latestVersion === "string" && isReleaseVersion(item.latestVersion));
 }
 
 async function requestStatus(endpoint: string, method: "GET" | "POST", signal?: AbortSignal) {

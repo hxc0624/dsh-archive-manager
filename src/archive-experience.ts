@@ -7,10 +7,13 @@ export interface SessionNavigationSource {
   retainInfo?(id: string): unknown;
   retain?: unknown;
   open?(id: string): unknown;
+  clear?(): void;
 }
 export interface NavigationSource {
   clearArchivedCurrent?: (...args: unknown[]) => unknown;
   openSession?(id: string): unknown;
+  mainReference?: { readonly sessionId: string };
+  clearMain?(): void;
 }
 interface NavigationOptions {
   onOpened?: () => void;
@@ -62,6 +65,24 @@ function mainViewSessionId(list: SessionList | undefined) {
  */
 export function currentSessionId(list: SessionList | undefined) {
   return mainViewSessionId(list) ?? list?.current;
+}
+
+/** 删除成功后释放主视图；移除通知可能早于响应，不能依赖已经消失的列表行。 */
+export function clearDeletedConversation(navigation: NavigationSource | undefined, sessions: SessionNavigationSource, deletedSessionIds: readonly string[]) {
+  // 新宿主的引用也能区分等待删除期间的切换；已清空时不回退到陈旧的 current。
+  const current = navigation && "mainReference" in navigation
+    ? navigation.mainReference?.sessionId
+    : currentSessionId(sessions.list.getSnapshot());
+  if (current === undefined || !deletedSessionIds.includes(current)) return false;
+  if (typeof navigation?.clearMain === "function") {
+    navigation.clearMain();
+    return true;
+  }
+  if (typeof sessions.clear === "function") {
+    sessions.clear();
+    return true;
+  }
+  return false;
 }
 
 /**

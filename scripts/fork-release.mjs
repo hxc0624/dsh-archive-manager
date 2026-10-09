@@ -1,4 +1,4 @@
-// Personal GitHub release channel. No npm publishing or npm credentials.
+// HXC DSH Toolkit GitHub releases. No npm publishing or npm credentials.
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -6,7 +6,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { isForkVersion, RELEASE_ASSET, RELEASE_REPOSITORY, releaseVersion } from "../lib/release-channel.js";
+import { isNewerVersion, isReleaseVersion, isStableVersion, PRODUCT_NAME, RELEASE_ASSET, RELEASE_REPOSITORY, releaseVersion } from "../lib/release-channel.js";
 
 const exec = promisify(execFile);
 const checksumName = "SHA256SUMS.txt";
@@ -14,8 +14,8 @@ const gh = async (args) => (await exec("gh", args, { windowsHide: true })).stdou
 
 export function validateRelease(tag, manifest, head, taggedHead) {
   assert.equal(manifest.name, "@michengai/dsh-archive-manager", "Keep the installed plugin identity");
-  assert.equal(manifest.private, true, "The personal fork must not publish to npm");
-  assert.ok(isForkVersion(manifest.version), "Use X.Y.Z-hxc.N for personal releases");
+  assert.equal(manifest.private, true, "Toolkit releases must not publish to npm");
+  assert.ok(isStableVersion(manifest.version), "Use independent X.Y.Z stable versions for new Toolkit releases");
   assert.equal(tag, `v${manifest.version}`, "Release tag must match package.json");
   assert.equal(head.trim(), taggedHead.trim(), "Check out the exact tagged commit");
 }
@@ -23,7 +23,7 @@ export function validateRelease(tag, manifest, head, taggedHead) {
 async function validateTag(tag) {
   const manifest = JSON.parse(await readFile("package.json", "utf8"));
   assert.equal(tag, `v${manifest.version}`, "Release tag must match package.json");
-  assert.ok(isForkVersion(manifest.version), "Invalid personal release version");
+  assert.ok(isStableVersion(manifest.version), "Invalid Toolkit stable version");
   const [head, tagged] = await Promise.all([
     exec("git", ["rev-parse", "HEAD"], { windowsHide: true }),
     exec("git", ["rev-parse", `refs/tags/${tag}^{commit}`], { windowsHide: true }),
@@ -31,12 +31,9 @@ async function validateTag(tag) {
   validateRelease(tag, manifest, head.stdout, tagged.stdout);
 }
 
-export function newerForkVersion(left, right) {
-  if (!isForkVersion(left) || !isForkVersion(right)) return false;
-  const parts = (value) => value.split(/[.-]/).filter((part) => part !== "hxc").map(BigInt);
-  const a = parts(left), b = parts(right);
-  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] > b[i];
-  return false;
+export function newerReleaseVersion(left, right) {
+  if (!isReleaseVersion(left) || !isReleaseVersion(right)) return false;
+  return isNewerVersion(right, left);
 }
 
 export async function writeChecksum(directory) {
@@ -48,7 +45,7 @@ export async function writeChecksum(directory) {
 }
 
 export async function publishRelease(tag, directory, notes, run = gh) {
-  assert.ok(tag.startsWith("v") && isForkVersion(tag.slice(1)), "Invalid personal release tag");
+  assert.ok(tag.startsWith("v") && isStableVersion(tag.slice(1)), "Invalid Toolkit stable release tag");
   // A failed read must never be interpreted as permission to publish.
   const pages = JSON.parse(await run(["api", `repos/${RELEASE_REPOSITORY}/releases?per_page=100`, "--paginate", "--slurp"]));
   assert.ok(Array.isArray(pages) && pages.every(Array.isArray), "Unexpected release response");
@@ -56,12 +53,12 @@ export async function publishRelease(tag, directory, notes, run = gh) {
   const existing = releases.find((release) => release.tag_name === tag);
   assert.ok(existing === undefined || existing.draft === true, "This version is already published; create a new version instead of replacing it");
   if (existing === undefined) {
-    await run(["release", "create", tag, "--repo", RELEASE_REPOSITORY, "--verify-tag", "--draft", "--title", `${tag} · Personal fork`, "--notes-file", notes]);
+    await run(["release", "create", tag, "--repo", RELEASE_REPOSITORY, "--verify-tag", "--draft", "--title", `${PRODUCT_NAME} ${tag}`, "--notes-file", notes]);
   }
   await run(["release", "upload", tag, resolve(directory, RELEASE_ASSET), resolve(directory, checksumName), "--repo", RELEASE_REPOSITORY, "--clobber"]);
   const newerPublished = releases.some((release) => {
     const version = releaseVersion(release);
-    return version !== undefined && newerForkVersion(version, tag.slice(1));
+    return version !== undefined && newerReleaseVersion(version, tag.slice(1));
   });
   // Both assets must finish uploading before the updater can discover this release.
   await run(["release", "edit", tag, "--repo", RELEASE_REPOSITORY, "--notes-file", notes,

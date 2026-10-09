@@ -1,6 +1,32 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { openArchivedConversation, allowArchivedNavigation, ArchiveNavigationError, formatArchiveNavigationError, currentSessionId, sessionIsCurrent } from "../src/archive-experience.ts";
+import { openArchivedConversation, allowArchivedNavigation, ArchiveNavigationError, formatArchiveNavigationError, currentSessionId, sessionIsCurrent, clearDeletedConversation } from "../src/archive-experience.ts";
+
+test("删除导航兼容旧宿主：仅在当前会话删除成功后调用 sessions.clear", () => {
+  const state = { current: "a", byId: {} };
+  let clears = 0;
+  const sessions = { list: { getSnapshot: () => state }, clear() { clears++; delete state.current; } };
+  assert.equal(clearDeletedConversation(undefined, sessions, ["b"]), false);
+  assert.equal(clears, 0);
+  assert.equal(clearDeletedConversation(undefined, sessions, ["a"]), true);
+  assert.equal(clears, 1);
+  assert.equal(state.current, undefined);
+});
+
+test("删除导航以实时主引用为准，不使用陈旧的列表选择或已清空的引用", () => {
+  const sessions = { list: { getSnapshot: () => ({ current: "a", byId: {} }) }, clear() { throw new Error("不能绕过宿主导航"); } };
+  let clears = 0;
+  const navigation = { mainReference: { sessionId: "b" }, clearMain() { clears++; this.mainReference = undefined; } };
+  assert.equal(clearDeletedConversation(navigation, sessions, ["a"]), false);
+  assert.equal(clearDeletedConversation(navigation, sessions, ["b"]), true);
+  assert.equal(clearDeletedConversation(navigation, sessions, ["a"]), false);
+  assert.equal(clears, 1);
+});
+
+test("缺少关闭接口时不创建替代会话，也不因删除导航抛错", () => {
+  const sessions = { list: { getSnapshot: () => ({ current: "a", byId: {} }) } };
+  assert.equal(clearDeletedConversation({}, sessions, ["a"]), false);
+});
 
 test("保留信息边界容忍原始值与不可调用的快照字段", () => {
   for (const source of [{ getSnapshot: 42 }, "raw", null, undefined, {}]) {

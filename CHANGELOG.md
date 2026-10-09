@@ -6,6 +6,14 @@ Published release notes are retained below; new versions are added without remov
 
 ## Unreleased
 
+## 1.1.0 - 2026-10-09
+
+- Rename the plugin to HXC DSH Toolkit, with matching plugin metadata, settings entry, update UI, and documentation. Existing archive management remains available as session functionality.
+- Adopt independent major.minor.patch versions for Toolkit fixes, compatible features, and breaking changes. Track the upstream Archive Manager 1.0.16 base separately in FORK.md.
+- Accept stable versions and historical `-hxc.N` releases in the updater. Publish new `vX.Y.Z` tags while retaining the installed package identity, repository URL, asset filename, and published history.
+- Clear the current conversation immediately after successful deletion. Preserve the view after a failed request or a switch to another conversation, and reconcile batch deletion using its actual results.
+- Existing 1.0.16-hxc.1 updaters cannot recognize independent versions. Install 1.1.0 once through Desktop's bundled installer or the Web CLI, then restart to use the new automatic update rules.
+
 ## 1.0.16-hxc.1 - 2026-10-09
 
 - Personal hxc0624 fork based on MichengAI 1.0.16, retaining the Apache-2.0 license.

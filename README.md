@@ -1,26 +1,22 @@
-> **hxc0624 personal fork**: a compact centered sidebar delete dialog and an independent GitHub update channel. [Maintenance and releases](FORK.md) · [Download](https://github.com/hxc0624/dsh-archive-manager/releases)
+> **HXC DSH Toolkit 1.1.0**: session management, archive search, and interaction enhancements for DeepSeek Harness, with independent versioning. [Maintenance and releases](FORK.md) · [Download](https://github.com/hxc0624/dsh-archive-manager/releases)
 >
 > Based on [MichengAI/dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager), retaining the Apache-2.0 license. Personal changes are recorded in the changelog.
 
-<p align="center">
-  <img src="assets/branding/dsh-banner-en.webp" alt="DSH Archive Manager" width="100%">
-</p>
-
 <div align="center">
 
-  # DSH Archive Manager
+  # HXC DSH Toolkit
 
-  **Safely manage archived sessions in DeepSeek Harness**
+  **Session management and interaction enhancements for DeepSeek Harness**
 
   [简体中文](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Apache-2.0](LICENSE)
 
   [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
-  [![Personal release](https://img.shields.io/github/v/release/hxc0624/dsh-archive-manager)](https://github.com/hxc0624/dsh-archive-manager/releases)
-  [![DSH Web Plugin](https://img.shields.io/badge/DSH%20Web-Plugin-0f766e.svg)](https://github.com/MichengAI/dsh-archive-manager)
+  [![Toolkit release](https://img.shields.io/github/v/release/hxc0624/dsh-archive-manager)](https://github.com/hxc0624/dsh-archive-manager/releases)
+  [![DSH Web Plugin](https://img.shields.io/badge/DSH%20Web-Plugin-0f766e.svg)](https://github.com/hxc0624/dsh-archive-manager)
   [![DSH supported through 0.2.0-rc.2](https://img.shields.io/badge/DSH-up%20to%200.2.0--rc.2-2563eb.svg)](#prerequisites)
 </div>
 
-> DSH Archive Manager is a community-maintained DeepSeek Harness (DSH) plugin, not an official DeepSeek AI product.
+> HXC DSH Toolkit is a community-maintained DeepSeek Harness (DSH) plugin, not an official DeepSeek AI product.
 
 ## What you can do
 
@@ -33,7 +29,7 @@ Put inactive conversations away and find them again when needed, keeping everyda
 - **Organize important chats**: save favorites and preview idle cleanup while protecting favorites and active work.
 - **Inspect and troubleshoot**: preview without restoring, copy IDs/paths, diagnose errors, and repair supported legacy logs.
 
-> This README describes 1.0.0. See the [changelog](CHANGELOG.md) for the complete feature list and upgrade boundaries.
+> This README describes Toolkit 1.1.0, based on upstream Archive Manager 1.0.16. See the [changelog](CHANGELOG.md) for release history. Existing `1.0.16-hxc.1` installations need a one-time upgrade through Desktop's bundled installer or the Web CLI; the old updater does not recognize independent version tags. See [migration instructions](FORK.md#install-and-upgrade).
 
 ## Session diagnosis and repair
 
@@ -57,7 +53,7 @@ The archive page collects read failures, including archived IDs with missing sum
 
 ## Screenshots
 
-Search, favorite, preview, restore, and clean up in **Settings → Archived sessions → Archived**:
+Search, favorite, preview, restore, and clean up in **Settings → HXC DSH Toolkit → Archived**:
 
 ![Archived: shared search filters, favorites, and restore](assets/screenshots/archived-sessions.webp)
 
@@ -82,7 +78,7 @@ Examples use the `web` profile. Replace it with the profile you actually use.
 Send this prompt to an agent that can run terminal commands on your computer:
 
 ```text
-Install https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz into my local DSH web profile. Check the plugin configuration and personal update source, then explain how to reload DSH and open archived session management.
+Install https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz into my local DSH web profile. Check the plugin configuration and update source, then explain how to reload DSH and open HXC DSH Toolkit.
 ```
 
 ### Install manually
@@ -96,7 +92,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 dsh plugin --profile web add https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz --registry=https://registry.npmjs.org/
 ```
 
-Restart DSH Web, then hard-refresh your browser with `Ctrl+Shift+R`. Open **Settings → Archived sessions** to get started.
+Restart DSH Web, then hard-refresh your browser with `Ctrl+Shift+R`. Open **Settings → HXC DSH Toolkit** to get started.
 
 ## Usage
 
@@ -104,7 +100,7 @@ Restart DSH Web, then hard-refresh your browser with `Ctrl+Shift+R`. Open **Sett
 | --- | --- |
 | Archive one chat | Open its sidebar menu and choose **Archive session** |
 | Archive a workspace | Open the workspace menu and choose the option to archive its chats |
-| Find an archive | Open **Settings → Archived sessions**, then choose title/content search or filter by project, favorites, and dates |
+| Find an archive | Open **Settings → HXC DSH Toolkit**, then choose title/content search or filter by project, favorites, and dates |
 | Change the order | Sort by update time, creation time, title, or most/fewest turns |
 | Restore one chat | Click the restore icon, or choose **More → Restore and open** |
 | Archive a project or ungrouped chats | On **Unarchived**, open the group’s **…** menu and confirm archiving all chats in that group, regardless of search filters |
@@ -147,7 +143,7 @@ The canonical API is `workspaceRegistry.searchSessionContent({ sessionIds, query
 
 ## Updates
 
-Click **Check for updates** in the archive management page header. The source should be `hxc0624/dsh-archive-manager`; only this fork's published releases are offered. Upstream changes are merged and released by the owner. Supported CLI and Desktop environments can install through this dialog; other environments provide a manual command. Desktop requires its own installer and a full restart after installation. See [FORK.md](FORK.md) for maintenance and publishing.
+Click **Check for updates** in the HXC DSH Toolkit page header. The source should be `hxc0624/dsh-archive-manager`; updates use the Toolkit's independent versions. Upstream changes are merged and released by the maintainer. Supported CLI and Desktop environments can install through this dialog; other environments provide a manual command. Desktop requires its own installer and a full restart after installation. See [FORK.md](FORK.md) for maintenance and publishing.
 
 ## FAQ
 
@@ -162,7 +158,7 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 dsh --profile web --dump-config
 ```
 
-The configuration should include `ui-workspace-archive-manager` and must not disable official `workspace` or `session-projection-cache`. A leftover `archive-manager-host` override can be removed. On DSH 0.1.6+, official `ui-settings-unarchive-sessions` should be `disabled: true` so Settings keeps only this plugin's Archived sessions page. If your profile's `cordis.patch.yml` still disables `workspace`, `session-projection-cache`, or `ui-workspace`, remove those overrides and restart.
+The configuration should include `ui-workspace-archive-manager` and must not disable official `workspace` or `session-projection-cache`. A leftover `archive-manager-host` override can be removed. On DSH 0.1.6+, official `ui-settings-unarchive-sessions` should be `disabled: true` so Settings keeps only this plugin's HXC DSH Toolkit page. If your profile's `cordis.patch.yml` still disables `workspace`, `session-projection-cache`, or `ui-workspace`, remove those overrides and restart.
 
 ### How is archiving different from deletion?
 
@@ -170,9 +166,9 @@ Archiving puts a conversation away so you can restore it later. **Permanent dele
 
 ### Can I use it with Codex UI?
 
-Yes. [Codex UI](https://github.com/MichengAI/dsh-codex-ui) keeps its sidebar appearance and interactions. Archive management remains available in **Settings → Archived sessions**.
+Yes. [Codex UI](https://github.com/MichengAI/dsh-codex-ui) keeps its sidebar appearance and interactions. Archive management remains available in **Settings → HXC DSH Toolkit**.
 
-For other problems, open an [issue](https://github.com/MichengAI/dsh-archive-manager/issues) with your DSH and plugin versions, reproduction steps, and error details.
+For other problems, open an [issue](https://github.com/hxc0624/dsh-archive-manager/issues) with your DSH and plugin versions, reproduction steps, and error details.
 
 ## Install from source
 
