@@ -9,6 +9,7 @@ import { compareTurnCounts, copySessionText, discoveryInvocations, matchesUpdate
 import { allowArchivedNavigation, openArchivedConversation, formatArchiveNavigationError, ArchiveNavigationError, currentSessionId } from "./archive-experience.js";
 import { mirrorDirectoryFlow } from "./directory-flow-slot.js";
 import { observePluginUpdate } from "./plugin-update-ui.js";
+import { DeleteSessionDialog } from "./delete-session-dialog.js";
 import { favoriteInvocations, idleArchiveCandidate, createSessionOrganizer } from "./archive-organizer.js";
 import { createOrganizerPanel, organizerZh, organizerEn } from "./archive-organizer-ui.js";
 import { AntdProvider, Button as AntdButton, Checkbox as AntdCheckbox, Dropdown as AntdDropdown, Input as AntdInput, List as AntdList, Modal as AntdModal, Segmented as AntdSegmented, Select as AntdSelect } from "./antd-ui.js";
@@ -3751,6 +3752,10 @@ export function startArchiveClient(require: HostRequire) {
 			"archiveActive.pending": "正在停止并归档…",
 			"archives.forkFailed": "分叉会话失败：{detail}",
 			"deleteSession.title": "删除会话",
+			"deleteSession.confirmTitle": "删除此会话？",
+			"deleteSession.confirm": "删除",
+			"deleteSession.pendingShort": "删除中…",
+			"deleteSession.unnamed": "未命名会话",
 			"deleteSession.desc": "将永久删除会话“{name}”及其子代理（含正在运行的）和全部记录（对话内容、统计、缓存），此操作不可恢复。",
 			"deleteSession.pending": "正在删除会话…",
 			"deleteSession.unknown": "会话已不存在或已被删除。",
@@ -3908,6 +3913,10 @@ export function startArchiveClient(require: HostRequire) {
 			"archiveActive.pending": "Stopping and archiving…",
 			"archives.forkFailed": "Could not fork the session: {detail}",
 			"deleteSession.title": "Delete session",
+			"deleteSession.confirmTitle": "Delete this session?",
+			"deleteSession.confirm": "Delete",
+			"deleteSession.pendingShort": "Deleting…",
+			"deleteSession.unnamed": "Untitled session",
 			"deleteSession.desc": "This permanently deletes session “{name}”, its child agents (including any that are still running), and all of its records (conversation, stats, cache). This cannot be undone.",
 			"deleteSession.pending": "Deleting session…",
 			"deleteSession.unknown": "This session no longer exists or was already deleted.",
@@ -4272,38 +4281,11 @@ export function startArchiveClient(require: HostRequire) {
 			}
 			function DeleteSessionOverlay({ t }: { t: Translate }) {
 				const request = useDeleteRequest();
-				const [deleting, setDeleting] = (0, react.useState)(false);
-				const [error, setError] = (0, react.useState)<string | null>(null);
 				if (request === null) return null;
-				const close = () => {
-					if (deleting) return;
-					setError(null);
-					publishDeleteTarget(null);
-				};
-				const confirm = () => {
-					setDeleting(true);
-					setError(null);
-					deleteSession(request.sessionId).then(() => {
-						setDeleting(false);
-						publishDeleteTarget(null);
-					}).catch((reason) => {
-						setDeleting(false);
-						setError(formatDeleteError(reason, t));
-					});
-				};
-				return (0, react_jsx_runtime.jsx)(AntdProvider, { children: (0, react_jsx_runtime.jsx)(SettingsModal, {
-					open: true,
-					onClose: close,
-					title: t("deleteSession.title"),
-					footer: (0, react_jsx_runtime.jsxs)(react_jsx_runtime.Fragment, { children: [
-						settingsButton({ disabled: deleting, onClick: close, children: t("cancel") }),
-						settingsButton({ danger: true, disabled: deleting, onClick: confirm, children: t("deleteSession.title") })
-					] }),
-					children: [
-						deleting && (0, react_jsx_runtime.jsx)("div", { role: "status", children: t("deleteSession.pending") }),
-						error !== null && (0, react_jsx_runtime.jsx)("div", { role: "alert", children: error })
-					]
-				}) });
+				return react.createElement(DeleteSessionDialog, {
+					key: request.sessionId, target: request, t, onDelete: deleteSession,
+					onClose: () => { publishDeleteTarget(null); }, formatError: formatDeleteError,
+				});
 			}
 			/** 官方列表声明了会话菜单插槽时只追加删除；否则仍换成自有列表，旧宿主菜单没有扩展位。 */
 			function hostSidebarDeclaresSessionMenu() {

@@ -6,6 +6,14 @@ Published release notes are retained below; new versions are added without remov
 
 ## Unreleased
 
+## 1.0.16-hxc.1 - 2026-10-09
+
+- Personal hxc0624 fork based on MichengAI 1.0.16, retaining the Apache-2.0 license.
+- Use a 360px centered sidebar delete dialog with rounded corners, subtle shadow, host themes, and a session title without the permanent-deletion explanation.
+- Focus Cancel by default; support Esc/backdrop dismissal, duplicate-request prevention, inline errors, and retry.
+- Direct update checks, installation, and manual commands to hxc0624 GitHub Releases, with no fallback to the upstream npm package.
+- Add a personal release workflow and upstream merge guide. The owner controls merging, publishing, and installing updates.
+
 ## 1.0.16 - 2026-10-08
 
 - Session list cache is written to the plugin's safe folder again. It no longer falls back to the kernel folder without notice.

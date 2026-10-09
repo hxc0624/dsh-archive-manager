@@ -3,6 +3,7 @@ import type { Context } from "@deepseek-ai/cordis";
 import { symbols } from "@deepseek-ai/cordis";
 import type {} from "@deepseek-ai/dsh-host-webserver";
 import { record } from "./contracts.js";
+import { createLatestReleaseReader, releaseAssetUrl, RELEASE_REPOSITORY } from "./release-channel.js";
 interface DesktopPnpm { runPlugin(args: string[], directory: string): { done: Promise<{ exitCode: number }> } }
 interface PackageManagerLaunch { command: string; args: readonly string[]; env?: NodeJS.ProcessEnv }
 interface PluginManagerInstall { installBundle(spec: string): Promise<{ application?: string; error?: { message?: string }; packageResult?: { output?: string } }> }
@@ -213,30 +214,17 @@ function comparePrerelease(left: readonly string[], right: readonly string[]) {
   }
   return 0;
 }
-let latestCache: { packageName: string; version: string; expiresAt: number } | undefined;
-async function latestVersion(packageName: string) {
-  if (latestCache?.packageName === packageName && Date.now() < latestCache.expiresAt) return latestCache.version;
-  try {
-    const response = await fetch(`https://registry.npmjs.org/${encodeURIComponent(packageName)}/latest`, { signal: AbortSignal.timeout(8e3) });
-    if (!response.ok) return void 0;
-    const value = record(await response.json());
-    if (typeof value.version !== "string" || value.version === "") return void 0;
-    latestCache = { packageName, version: value.version, expiresAt: Date.now() + 5 * 6e4 };
-    return value.version;
-  } catch {
-    return void 0;
-  }
-}
 async function currentVersion(manifestUrl: URL) {
   const value = record(JSON.parse(await readFile(manifestUrl, "utf8")));
   if (typeof value.version !== "string" || value.version === "") throw new Error("\u65E0\u6CD5\u8BFB\u53D6\u5F53\u524D\u63D2\u4EF6\u7248\u672C\u3002");
   return value.version;
 }
-async function status(options: UpdateOptions, target: UpdateRuntime) {
+async function status(options: UpdateOptions, target: UpdateRuntime, latestRelease: ReturnType<typeof createLatestReleaseReader>) {
   const current = await currentVersion(options.manifestUrl);
-  const latest = await latestVersion(options.packageName);
+  const latest = await latestRelease();
   return {
     packageName: options.packageName,
+    releaseRepository: RELEASE_REPOSITORY,
     currentVersion: current,
     ...latest === void 0 ? {} : { latestVersion: latest },
     latestCheckFailed: latest === void 0,
@@ -361,6 +349,7 @@ function releaseUpdateRoute(server: object, path: string) {
 function registerPluginUpdater(ctx: Context, options: UpdateOptions) {
   const host = ctx;
   let installing = false;
+  const latestRelease = createLatestReleaseReader();
   const server = rawService(host.webServer);
   releaseUpdateRoute(server, options.endpoint);
   const dispose = host.webServer.register({
@@ -370,7 +359,7 @@ function registerPluginUpdater(ctx: Context, options: UpdateOptions) {
       try {
         const target = runtime(host);
         if (request.method === "GET" || request.method === "HEAD") {
-          const payload = await status(options, target);
+          const payload = await status(options, target, latestRelease);
           response.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
           response.end(request.method === "HEAD" ? void 0 : JSON.stringify(payload));
           return;
@@ -388,27 +377,28 @@ function registerPluginUpdater(ctx: Context, options: UpdateOptions) {
           json(response, 409, { error: "\u5F53\u524D\u63D2\u4EF6\u6B63\u5728\u66F4\u65B0\uFF0C\u8BF7\u7A0D\u5019\u3002" });
           return;
         }
-        const before = await status(options, target);
-        if (before.latestVersion === void 0) {
-          json(response, 503, { error: "\u6682\u65F6\u65E0\u6CD5\u83B7\u53D6\u6700\u65B0\u7248\u672C\u3002" });
-          return;
-        }
-        if (!before.updateAvailable) {
-          json(response, 200, before);
-          return;
-        }
+        // Lock before the first await, including the release lookup.
         installing = true;
         try {
-          await install(target, `${options.packageName}@${before.latestVersion}`);
+          const before = await status(options, target, latestRelease);
+          if (before.latestVersion === void 0) {
+            json(response, 503, { error: "暂时无法获取个人仓库的最新版本，请稍后重试。" });
+            return;
+          }
+          if (!before.updateAvailable) {
+            json(response, 200, before);
+            return;
+          }
+          await install(target, releaseAssetUrl(before.latestVersion));
+          const notifyParent = shouldNotifyParent(target);
+          const autoReload = target.desktopPnpm !== void 0 || notifyParent;
+          json(response, 200, { ...before, updatedVersion: before.latestVersion, restartRequired: true, autoReload, ...target.officialDesktop ? { restartDesktop: true } : {} });
+          if (notifyParent) setTimeout(() => {
+            process.send?.(PLUGIN_UPDATE_IPC);
+          }, 150).unref?.();
         } finally {
           installing = false;
         }
-        const notifyParent = shouldNotifyParent(target);
-        const autoReload = target.desktopPnpm !== void 0 || notifyParent;
-        json(response, 200, { ...before, updatedVersion: before.latestVersion, restartRequired: true, autoReload, ...target.officialDesktop ? { restartDesktop: true } : {} });
-        if (notifyParent) setTimeout(() => {
-          process.send?.(PLUGIN_UPDATE_IPC);
-        }, 150).unref?.();
       } catch (error) {
         ctx.logger.warn(`plugin updater failed: ${String(error)}`);
         json(response, 503, { error: publicError(error) });

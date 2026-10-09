@@ -1,3 +1,7 @@
+> **hxc0624 个人定制版**：保留紧凑居中的侧栏删除弹窗，更新由个人 Fork 的 GitHub Releases 提供。[自主维护与发布说明](FORK.md) · [下载定制版](https://github.com/hxc0624/dsh-archive-manager/releases)
+>
+> 上游为 [MichengAI/dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager)，沿用 Apache-2.0 许可证。此仓库的定制改动见更新日志。
+
 <p align="center">
   <img src="assets/branding/dsh-banner.webp" alt="DSH Archive Manager" width="100%">
 </p>
@@ -11,8 +15,7 @@
   [English](README.md) · [更新日志](CHANGELOG.zh-CN.md) · [Apache-2.0](LICENSE)
 
   [![许可证：Apache-2.0](https://img.shields.io/badge/许可证-Apache--2.0-blue.svg)](LICENSE)
-  [![npm package](https://img.shields.io/npm/v/%40michengai%2Fdsh-archive-manager.svg?label=npm%20package)](https://www.npmjs.com/package/@michengai/dsh-archive-manager)
-  [![npm 下载量](https://img.shields.io/npm/dt/%40michengai%2Fdsh-archive-manager.svg?label=npm%20%E4%B8%8B%E8%BD%BD%E9%87%8F)](https://www.npmjs.com/package/@michengai/dsh-archive-manager)
+  [![个人版本](https://img.shields.io/github/v/release/hxc0624/dsh-archive-manager)](https://github.com/hxc0624/dsh-archive-manager/releases)
   [![DSH Web Plugin](https://img.shields.io/badge/DSH%20Web-Plugin-0f766e.svg)](https://github.com/MichengAI/dsh-archive-manager)
   [![DSH 支持至 0.2.0-rc.2](https://img.shields.io/badge/DSH-%E6%94%AF%E6%8C%81%E8%87%B3%200.2.0--rc.2-2563eb.svg)](#前置条件)
 </div>
@@ -83,7 +86,7 @@
 把下面这段话发给能执行本机终端命令的 Agent：
 
 ```text
-请将 @michengai/dsh-archive-manager 最新版安装到本机 DSH 的 web profile，使用官方 npm 源。安装后检查插件配置，并告诉我如何重新加载 DSH、进入归档会话管理页。
+请将 https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz 安装到本机 DSH 的 web profile。安装后检查插件配置和个人更新来源，并告诉我如何重新加载 DSH、进入归档会话管理页。
 ```
 
 ### 手动安装
@@ -94,7 +97,7 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-dsh plugin --profile web add @michengai/dsh-archive-manager@latest --registry=https://registry.npmjs.org/
+dsh plugin --profile web add https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz --registry=https://registry.npmjs.org/
 ```
 
 安装后重启 DSH Web，并按 `Ctrl+Shift+R` 硬刷新浏览器。打开「设置 → 归档会话」即可使用。
@@ -148,7 +151,7 @@ dsh plugin --profile web add @michengai/dsh-archive-manager@latest --registry=ht
 
 ## 更新
 
-在归档管理页标题处点击「检查更新」。支持自动更新的 DSH CLI 或 Desktop 环境可直接更新；其他环境会提供适用于当前 profile 的手动命令。也可重新执行上面的安装命令。
+在归档管理页标题处点击「检查更新」，来源应为 `hxc0624/dsh-archive-manager`。更新只使用该仓库已发布的定制版，不会自动合并上游。支持的 CLI 或 Desktop 环境可点击更新；其他环境使用手工命令。Desktop 需使用自带安装器，并在安装后完全退出重开。合并上游和发布新版本见 [FORK.md](FORK.md)。
 
 ## 常见问题
 
@@ -186,7 +189,7 @@ dsh --profile web --dump-config
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-git clone https://github.com/MichengAI/dsh-archive-manager.git
+git clone https://github.com/hxc0624/dsh-archive-manager.git
 Set-Location .\dsh-archive-manager
 pnpm install --frozen-lockfile
 pnpm build

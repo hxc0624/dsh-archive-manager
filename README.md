@@ -1,3 +1,7 @@
+> **hxc0624 personal fork**: a compact centered sidebar delete dialog and an independent GitHub update channel. [Maintenance and releases](FORK.md) · [Download](https://github.com/hxc0624/dsh-archive-manager/releases)
+>
+> Based on [MichengAI/dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager), retaining the Apache-2.0 license. Personal changes are recorded in the changelog.
+
 <p align="center">
   <img src="assets/branding/dsh-banner-en.webp" alt="DSH Archive Manager" width="100%">
 </p>
@@ -11,8 +15,7 @@
   [简体中文](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Apache-2.0](LICENSE)
 
   [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](LICENSE)
-  [![npm package](https://img.shields.io/npm/v/%40michengai%2Fdsh-archive-manager.svg?label=npm%20package)](https://www.npmjs.com/package/@michengai/dsh-archive-manager)
-  [![npm downloads](https://img.shields.io/npm/dt/%40michengai%2Fdsh-archive-manager.svg?label=npm%20downloads)](https://www.npmjs.com/package/@michengai/dsh-archive-manager)
+  [![Personal release](https://img.shields.io/github/v/release/hxc0624/dsh-archive-manager)](https://github.com/hxc0624/dsh-archive-manager/releases)
   [![DSH Web Plugin](https://img.shields.io/badge/DSH%20Web-Plugin-0f766e.svg)](https://github.com/MichengAI/dsh-archive-manager)
   [![DSH supported through 0.2.0-rc.2](https://img.shields.io/badge/DSH-up%20to%200.2.0--rc.2-2563eb.svg)](#prerequisites)
 </div>
@@ -79,7 +82,7 @@ Examples use the `web` profile. Replace it with the profile you actually use.
 Send this prompt to an agent that can run terminal commands on your computer:
 
 ```text
-Install the latest @michengai/dsh-archive-manager into my local DSH web profile using the official npm registry. Check the plugin configuration afterward, then explain how to reload DSH and open archived session management.
+Install https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz into my local DSH web profile. Check the plugin configuration and personal update source, then explain how to reload DSH and open archived session management.
 ```
 
 ### Install manually
@@ -90,7 +93,7 @@ Run in PowerShell:
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-dsh plugin --profile web add @michengai/dsh-archive-manager@latest --registry=https://registry.npmjs.org/
+dsh plugin --profile web add https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz --registry=https://registry.npmjs.org/
 ```
 
 Restart DSH Web, then hard-refresh your browser with `Ctrl+Shift+R`. Open **Settings → Archived sessions** to get started.
@@ -144,7 +147,7 @@ The canonical API is `workspaceRegistry.searchSessionContent({ sessionIds, query
 
 ## Updates
 
-Click **Check for updates** in the archive management page header. DSH CLI or Desktop environments with automatic update support can update directly; other environments provide a manual command for the current profile. You can also rerun the installation command above.
+Click **Check for updates** in the archive management page header. The source should be `hxc0624/dsh-archive-manager`; only this fork's published releases are offered. Upstream changes are merged and released by the owner. Supported CLI and Desktop environments can install through this dialog; other environments provide a manual command. Desktop requires its own installer and a full restart after installation. See [FORK.md](FORK.md) for maintenance and publishing.
 
 ## FAQ
 
@@ -182,7 +185,7 @@ Run these commands in a directory of your choice. For local changes that have no
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $OutputEncoding = [System.Text.Encoding]::UTF8
 
-git clone https://github.com/MichengAI/dsh-archive-manager.git
+git clone https://github.com/hxc0624/dsh-archive-manager.git
 Set-Location .\dsh-archive-manager
 pnpm install --frozen-lockfile
 pnpm build

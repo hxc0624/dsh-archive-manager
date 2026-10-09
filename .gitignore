@@ -19,3 +19,8 @@ docs/
 
 # 本机代码索引
 .codegraph/
+
+# Local release packages and browser verification artifacts.
+.fork-release/
+.browser-profile/
+.browser-verification/

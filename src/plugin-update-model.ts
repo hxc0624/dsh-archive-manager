@@ -1,14 +1,18 @@
-export interface UpdatePayload { packageName: string; currentVersion: string; updateAvailable: boolean; profileName: string; canAutoUpdate: boolean; latestCheckFailed: boolean; latestVersion?: string; autoReload?: boolean; restartDesktop?: boolean }
+import { releaseAssetUrl } from "./release-channel.js";
+
+export interface UpdatePayload { packageName: string; releaseRepository?: string; currentVersion: string; updateAvailable: boolean; profileName: string; canAutoUpdate: boolean; latestCheckFailed: boolean; latestVersion?: string; autoReload?: boolean; restartDesktop?: boolean }
 type UpdatePhase = "idle" | "checking" | "updating";
 type UpdateNotice = { type: "status" } | { type: "restart" } | { type: "restarting" } | { type: "error"; message: string };
 
 export const ZH = {
 	check: "检查更新", update: "更新", recheck: "重新检查", auto: "自动更新", updating: "正在更新…", copy: "复制命令", copied: "已复制", copyFailed: "复制失败",
+	source: "更新来源", forkIntro: "仅安装个人仓库已发布的定制版本。上游更新由仓库所有者合并并发布后提供。",
 	checking: "正在检查更新…", latest: "已是最新版本", found: "发现新版本", failed: "检查更新失败，请稍后重试。", current: "运行版本", latestLabel: "最新版本", profile: "目标 profile", unknown: "未知",
 	manual: "手工更新", manualHint: "自动更新失败时，可在当前 DSH 终端执行以下命令，完成后重启 DSH Web。", manualHintDesktop: "自动更新失败时，请先完全退出 DSH Desktop，再用 Desktop 自带的 dsh 执行以下命令。普通 dsh 会拒绝 desktop profile。", intro: "仅检查并更新当前插件，不会联动安装其他插件。", restart: "更新完成，请重启 DSH Web。", restartDesktop: "更新完成，请完全退出并重新打开 DSH Desktop。", restarting: "更新完成，正在重启 DSH Desktop…", unavailable: "当前环境不支持自动更新，请使用手工更新命令。",
 };
 export const EN = {
 	check: "Check for updates", update: "Update", recheck: "Check again", auto: "Update automatically", updating: "Updating…", copy: "Copy command", copied: "Copied", copyFailed: "Copy failed",
+	source: "Update source", forkIntro: "Installs published releases from the personal fork. Its owner decides when to merge and release upstream changes.",
 	checking: "Checking for updates…", latest: "You are up to date", found: "New version available", failed: "Could not check for updates. Try again later.", current: "Running version", latestLabel: "Latest version", profile: "Target profile", unknown: "Unknown",
 	manual: "Manual update", manualHint: "If automatic update fails, run this command in the current DSH terminal, then restart DSH Web.", manualHintDesktop: "If automatic update fails, fully quit DSH Desktop, then run this command with Desktop's own dsh. A regular dsh rejects the desktop profile.", intro: "Only this plugin is checked and updated. Other plugins are not changed.", restart: "Update complete. Restart DSH Web.", restartDesktop: "Update complete. Fully quit and reopen DSH Desktop.", restarting: "Update complete. Restarting DSH Desktop…", unavailable: "Automatic update is unavailable. Use the manual command.",
 };
@@ -80,9 +84,11 @@ export function createUpdateFlow(request: (method: "GET" | "POST") => Promise<Up
 	};
 }
 
-export function manualPluginUpdateCommand(profileName: string, packageName: string, version: string) {
-	const profile = profileName.trim() === "" ? "" : ` --profile ${profileName.trim()}`;
-	return `dsh plugin${profile} add ${packageName}@${version} --registry=https://registry.npmjs.org/`;
+export function manualPluginUpdateCommand(profileName: string, version: string) {
+	const selected = profileName.trim();
+	if (selected !== "" && !/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(selected)) throw new Error("Invalid profile name");
+	const profile = selected === "" ? "" : ` --profile ${selected}`;
+	return `dsh plugin${profile} add ${releaseAssetUrl(version)} --registry=https://registry.npmjs.org/`;
 }
 
 interface PluginUpdateEscapeEvent { readonly key: string; preventDefault(): void; stopPropagation(): void; stopImmediatePropagation(): void }

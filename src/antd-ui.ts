@@ -42,12 +42,12 @@ function unwrap<T>(mod: unknown): T {
 
 export const Input = unwrap<React.ComponentType<InputProps>>(InputImport);
 export const InputNumber = unwrap<React.ComponentType<InputNumberProps>>(InputNumberImport);
-export const Button = unwrap<React.ComponentType<ButtonProps>>(ButtonImport);
+export const Button = unwrap<React.ForwardRefExoticComponent<ButtonProps & React.RefAttributes<HTMLAnchorElement | HTMLButtonElement>>>(ButtonImport);
 export const Checkbox = unwrap<React.ComponentType<CheckboxProps>>(CheckboxImport);
 export const Collapse = unwrap<React.ComponentType<CollapseProps>>(CollapseImport);
 export const ConfigProvider = unwrap<React.ComponentType<ConfigProviderProps>>(ConfigProviderImport);
 export const Dropdown = unwrap<React.ComponentType<DropdownProps>>(DropdownImport);
-export const Modal = unwrap<React.ComponentType<ModalProps>>(ModalImport);
+export const Modal = unwrap<React.ComponentType<ModalProps & React.AriaAttributes>>(ModalImport);
 export const Progress = unwrap<React.ComponentType<ProgressProps>>(ProgressImport);
 export const Segmented = unwrap<React.ComponentType<SegmentedProps>>(SegmentedImport);
 export const Select = unwrap<React.ComponentType<SelectProps>>(SelectImport);

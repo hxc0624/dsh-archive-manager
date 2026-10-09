@@ -1,7 +1,8 @@
 {
   "name": "@michengai/dsh-archive-manager",
-  "version": "1.0.16",
-  "description": "归档、恢复、收藏和永久删除会话，并诊断损坏的会话日志。 · Archive, restore, favorite, and permanently delete sessions, and diagnose damaged session logs.",
+  "version": "1.0.16-hxc.1",
+  "private": true,
+  "description": "hxc0624 个人定制版：紧凑居中的删除弹窗，使用独立 GitHub 更新渠道。 · Personal fork with a compact centered delete dialog and its own GitHub release channel.",
   "type": "module",
   "packageManager": "pnpm@11.22.0",
   "engines": {
@@ -24,6 +25,7 @@
     "cordis.patch.yml",
     "README.md",
     "README.zh-CN.md",
+    "FORK.md",
     "LICENSE",
     "CHANGELOG.md",
     "CHANGELOG.zh-CN.md"
@@ -132,11 +134,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MichengAI/dsh-archive-manager.git"
+    "url": "git+https://github.com/hxc0624/dsh-archive-manager.git"
   },
-  "homepage": "https://github.com/MichengAI/dsh-archive-manager#readme",
+  "homepage": "https://github.com/hxc0624/dsh-archive-manager#readme",
   "bugs": {
-    "url": "https://github.com/MichengAI/dsh-archive-manager/issues"
+    "url": "https://github.com/hxc0624/dsh-archive-manager/issues"
   },
   "keywords": [
     "deepseek",
@@ -149,9 +151,5 @@
     "workspace",
     "nodejs",
     "esm"
-  ],
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  }
+  ]
 }
