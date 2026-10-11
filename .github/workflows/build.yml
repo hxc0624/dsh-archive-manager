@@ -1,0 +1,26 @@
+name: Session Manager build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - name: Install development dependencies
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile --config.minimumReleaseAge=1440 --registry=https://registry.npmjs.org/
+      - name: Verify types, build and package
+        run: pnpm verify

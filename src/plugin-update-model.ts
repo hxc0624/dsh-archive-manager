@@ -5,16 +5,18 @@ type UpdatePhase = "idle" | "checking" | "updating";
 type UpdateNotice = { type: "status" } | { type: "restart" } | { type: "restarting" } | { type: "error"; message: string };
 
 export const ZH = {
-	check: "检查更新", update: "更新", recheck: "重新检查", auto: "自动更新", updating: "正在更新…", copy: "复制命令", copied: "已复制", copyFailed: "复制失败",
-	source: "更新来源", forkIntro: "HXC DSH Toolkit 使用独立版本号，从维护者的 GitHub Releases 获取更新。",
-	checking: "正在检查更新…", latest: "已是最新版本", found: "发现新版本", failed: "检查更新失败，请稍后重试。", current: "运行版本", latestLabel: "最新版本", profile: "目标 profile", unknown: "未知",
-	manual: "手工更新", manualHint: "自动更新失败时，可在当前 DSH 终端执行以下命令，完成后重启 DSH Web。", manualHintDesktop: "自动更新失败时，请先完全退出 DSH Desktop，再用 Desktop 自带的 dsh 执行以下命令。普通 dsh 会拒绝 desktop profile。", intro: "仅检查并更新当前插件，不会联动安装其他插件。", restart: "更新完成，请重启 DSH Web。", restartDesktop: "更新完成，请完全退出并重新打开 DSH Desktop。", restarting: "更新完成，正在重启 DSH Desktop…", unavailable: "当前环境不支持自动更新，请使用手工更新命令。",
+	check: "检查 GitHub 稳定版", update: "稳定版本", recheck: "重新检查", auto: "安装稳定版", updating: "正在安装…", copy: "复制命令", copied: "已复制", copyFailed: "复制失败",
+	source: "稳定版来源", forkIntro: "以本地源码为维护主体，修改后构建并同步即可生效。GitHub 仅按需发布稳定版本，检查和安装均由你手动发起。",
+	checking: "正在检查稳定版…", latest: "暂无更高版本的稳定发布", found: "可安装稳定版", failed: "稳定版检查失败，不影响本地维护，请稍后重试。", current: "本地基础版本", latestLabel: "已发布稳定版", profile: "安装目标", unknown: "未知",
+	overwrite: "我了解安装稳定版会替换当前插件的本地构建，已保留需要的源码和改动。",
+	manual: "终端安装稳定版", manualHint: "如需通过终端安装，在当前 DSH 终端执行此命令，完成后重启 DSH Web。", manualHintDesktop: "如需通过终端安装，请先完全退出 DSH Desktop，再用 Desktop 自带的 dsh 执行此命令。普通 dsh 会拒绝 desktop profile。", intro: "源码中的未发布改动不参与版本号比较。", restart: "安装完成，请重启 DSH Web。", restartDesktop: "安装完成，请完全退出并重新打开 DSH Desktop。", restarting: "安装完成，正在重启 DSH Desktop…", unavailable: "当前环境不支持界面安装，可使用终端安装命令。",
 };
 export const EN = {
-	check: "Check for updates", update: "Update", recheck: "Check again", auto: "Update automatically", updating: "Updating…", copy: "Copy command", copied: "Copied", copyFailed: "Copy failed",
-	source: "Update source", forkIntro: "HXC DSH Toolkit uses independent versions and updates from its maintainer's GitHub Releases.",
-	checking: "Checking for updates…", latest: "You are up to date", found: "New version available", failed: "Could not check for updates. Try again later.", current: "Running version", latestLabel: "Latest version", profile: "Target profile", unknown: "Unknown",
-	manual: "Manual update", manualHint: "If automatic update fails, run this command in the current DSH terminal, then restart DSH Web.", manualHintDesktop: "If automatic update fails, fully quit DSH Desktop, then run this command with Desktop's own dsh. A regular dsh rejects the desktop profile.", intro: "Only this plugin is checked and updated. Other plugins are not changed.", restart: "Update complete. Restart DSH Web.", restartDesktop: "Update complete. Fully quit and reopen DSH Desktop.", restarting: "Update complete. Restarting DSH Desktop…", unavailable: "Automatic update is unavailable. Use the manual command.",
+	check: "Check GitHub stable release", update: "Stable releases", recheck: "Check again", auto: "Install stable release", updating: "Installing…", copy: "Copy command", copied: "Copied", copyFailed: "Copy failed",
+	source: "Stable release source", forkIntro: "Maintain local source, then build and sync your changes. GitHub stable releases are published as needed. Checks and installations are started manually.",
+	checking: "Checking stable release…", latest: "No newer stable release published", found: "Stable release available", failed: "Stable release check failed. Local maintenance remains available. Try again later.", current: "Local base version", latestLabel: "Published stable release", profile: "Install target", unknown: "Unknown",
+	overwrite: "I understand that installing a stable release replaces this plugin's local build, and have retained my source and changes.",
+	manual: "Install stable release in terminal", manualHint: "To install from the terminal, run this command in the current DSH terminal, then restart DSH Web.", manualHintDesktop: "To install from the terminal, fully quit DSH Desktop, then run this command with Desktop's own dsh. A regular dsh rejects the desktop profile.", intro: "Unpublished source changes are not compared by version number.", restart: "Installation complete. Restart DSH Web.", restartDesktop: "Installation complete. Fully quit and reopen DSH Desktop.", restarting: "Installation complete. Restarting DSH Desktop…", unavailable: "Installation from this interface is unavailable. Use the terminal command.",
 };
 type UpdateStrings = { [Key in keyof typeof ZH]: string };
 
@@ -43,7 +45,7 @@ export function describePluginUpdate(lang: string, payload: UpdatePayload | unde
 	return {
 		copy, busy, message, kind, loading: phase === "updating",
 		updateLabel: phase === "updating" ? copy.updating : copy.auto,
-		disabled: busy || payload?.canAutoUpdate !== true || payload.updateAvailable !== true,
+		disabled: busy || notice.type === "restart" || notice.type === "restarting" || payload?.canAutoUpdate !== true || payload.updateAvailable !== true,
 		currentVersion: payload === undefined ? copy.unknown : `v${payload.currentVersion}`,
 		latestVersion: payload?.latestVersion === undefined ? copy.unknown : `v${payload.latestVersion}`,
 		profileName: payload?.profileName ?? copy.unknown,
@@ -52,7 +54,7 @@ export function describePluginUpdate(lang: string, payload: UpdatePayload | unde
 	};
 }
 
-export function createUpdateFlow(request: (method: "GET" | "POST") => Promise<UpdatePayload>, initial?: UpdatePayload, onPayload?: (value: UpdatePayload) => void) {
+export function createUpdateFlow(request: (method: "GET" | "POST", acknowledgeOverwrite?: boolean) => Promise<UpdatePayload>, initial?: UpdatePayload, onPayload?: (value: UpdatePayload) => void) {
 	let phase: UpdatePhase = "idle";
 	let current = initial;
 	let notice: UpdateNotice = { type: "status" };
@@ -71,11 +73,11 @@ export function createUpdateFlow(request: (method: "GET" | "POST") => Promise<Up
 			catch (error) { notice = { type: "error", message: error instanceof Error ? error.message : "" }; }
 			finally { phase = "idle"; emit(); }
 		},
-		async update() {
-			if (phase !== "idle") return;
+		async update(acknowledgeOverwrite = false) {
+			if (phase !== "idle" || notice.type === "restart" || notice.type === "restarting" || !acknowledgeOverwrite || current?.canAutoUpdate !== true || current.updateAvailable !== true) return;
 			phase = "updating"; notice = { type: "status" }; posts += 1; emit();
 			try {
-				const next = await request("POST");
+				const next = await request("POST", true);
 				assign(next);
 				notice = { type: next.autoReload === true ? "restarting" : "restart" };
 			} catch (error) { notice = { type: "error", message: error instanceof Error ? error.message : "" }; }

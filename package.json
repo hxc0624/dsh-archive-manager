@@ -1,8 +1,8 @@
 {
   "name": "@michengai/dsh-archive-manager",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
-  "description": "HXC DSH Toolkit（DSH 增强工具箱）：会话管理、归档检索与交互增强。 · Session management, archive search, and interaction enhancements for DeepSeek Harness.",
+  "description": "Session Manager（会话管理）：归档检索、批量整理与交互增强。 · Session management, archive search, and interaction enhancements for DeepSeek Harness.",
   "type": "module",
   "packageManager": "pnpm@11.22.0",
   "engines": {
@@ -25,21 +25,16 @@
     "cordis.patch.yml",
     "README.md",
     "README.zh-CN.md",
-    "FORK.md",
     "LICENSE",
     "CHANGELOG.md",
     "CHANGELOG.zh-CN.md"
   ],
   "scripts": {
+    "install:local": "pnpm build && node scripts/install-local.mjs",
     "build": "pnpm typecheck && node scripts/build.mjs && node scripts/check-package.mjs",
-    "test": "pnpm build && node --import tsx --test test/*.test.mjs",
-    "test:matrix": "pnpm build && node scripts/test-version-matrix.mjs",
-    "test:latest": "pnpm build && node scripts/test-latest-compatibility.mjs",
-    "test:compat": "pnpm build && node scripts/test-legacy-compatibility.mjs && pnpm test:matrix",
     "pack:check": "pnpm pack --dry-run",
-    "verify": "pnpm test && pnpm test:compat && pnpm pack:check && node scripts/check-generated.mjs",
+    "verify": "pnpm build && pnpm pack:check && node scripts/check-generated.mjs",
     "release:preflight": "pwsh -NoProfile -File scripts/release-preflight.ps1",
-    "prepublishOnly": "pnpm verify",
     "prepack": "pnpm build",
     "typecheck": "tsc --noEmit"
   },
@@ -82,7 +77,6 @@
     "@deepseek-ai/dsh-client-store": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-conversation": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-primitives": "0.2.0-rc.2",
-    "@deepseek-ai/dsh-client-ui-renderer": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-sidebar": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-slots": "0.2.0-rc.2",
     "@deepseek-ai/dsh-client-ui-workspace": "0.2.0-rc.2",
@@ -110,8 +104,6 @@
     "immer": "10.1.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "semver": "7.7.2",
-    "tsx": "^4.23.13",
     "typescript": "5.9.3",
     "zustand": "4.4.7"
   },

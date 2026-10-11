@@ -5,10 +5,10 @@ import type { Schema } from "./contracts.js";
 import type { ClientSession, ClientList, ClientWorkspace, WorkspaceSnapshot, Observable, WorkspaceView, UiFacts, PendingHook, StatusHook, StatusMap, BatchTarget, DeletedBatch, ArchivedGroup, ArchiveProps, ArchiveBatchResult, ArchiveRetry, Translate, BatchProgress, OrganizeKind, SessionDetail } from "./client-types.js";
 import { createSessionHealthPanel, healthZh, healthEn } from "./session-health-ui.js";
 import { createDiscoveryTools, discoveryCss, discoveryZh, discoveryEn } from "./archive-discovery-ui.js";
-import { compareTurnCounts, copySessionText, discoveryInvocations, matchesUpdatedRange, validUpdatedRange, sessionDetailCandidates } from "./archive-discovery.js";
+import { copySessionText, discoveryInvocations, matchesUpdatedRange, validUpdatedRange, sessionDetailCandidates } from "./archive-discovery.js";
 import { allowArchivedNavigation, openArchivedConversation, formatArchiveNavigationError, ArchiveNavigationError, currentSessionId, clearDeletedConversation } from "./archive-experience.js";
 import { mirrorDirectoryFlow } from "./directory-flow-slot.js";
-import { observePluginUpdate } from "./plugin-update-ui.js";
+import { observePluginUpdate, openStableReleaseDialog } from "./plugin-update-ui.js";
 import { DeleteSessionDialog } from "./delete-session-dialog.js";
 import { favoriteInvocations, idleArchiveCandidate, createSessionOrganizer } from "./archive-organizer.js";
 import { createOrganizerPanel, organizerZh, organizerEn } from "./archive-organizer-ui.js";
@@ -63,32 +63,6 @@ export function startArchiveClient(require: HostRequire) {
 		const OrganizerPanel = createOrganizerPanel(react);
         const { HighlightedText, useSessionDetails, useArchiveSearch, useArchivePreview, DiscoveryFilters, SearchStatus, PreviewContent } = createDiscoveryTools(react);
         const SessionHealthPanel = createSessionHealthPanel(react, { warning: _deepseek_ai_dsh_client_ui_primitives.IconWarningOutline16, info: _deepseek_ai_dsh_client_ui_primitives.IconInfoOutline14, check: _deepseek_ai_dsh_client_ui_primitives.IconCheckOutline16, refresh: _deepseek_ai_dsh_client_ui_primitives.IconRefreshOutline16, search: _deepseek_ai_dsh_client_ui_primitives.IconSearchOutline16, chevron: _deepseek_ai_dsh_client_ui_primitives.IconChevronDownOutline14 });
-		const UPDATE_ICON_PATHS: Record<string, string[]> = {
-			refresh: ["M13.5 5.5V2.5m0 0h-3m3 0-2.1 2.1A5.5 5.5 0 1 0 13.2 12"],
-			download: ["M8 2v8m0 0 3-3m-3 3-3-3M3 13v2h10v-2"],
-			copy: ["M5 5h8v8H5z", "M3 3h8"],
-			close: ["m4 4 8 8M12 4 4 12"]
-		};
-		function createPluginUpdateIcon(name: string) {
-			const element = document.createElement("span");
-			const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-			svg.setAttribute("viewBox", "0 0 16 16");
-			svg.setAttribute("width", "16");
-			svg.setAttribute("height", "16");
-			svg.setAttribute("fill", "none");
-			svg.setAttribute("stroke", "currentColor");
-			svg.setAttribute("stroke-width", "1.5");
-			svg.setAttribute("stroke-linecap", "round");
-			svg.setAttribute("stroke-linejoin", "round");
-			svg.setAttribute("aria-hidden", "true");
-			for (const d of UPDATE_ICON_PATHS[name]) {
-				const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-				path.setAttribute("d", d);
-				svg.append(path);
-			}
-			element.append(svg);
-			return element;
-		}
 		//#region dsh-archive-manager: typert remote contribution + archived styling
 		/**
 		* Strict codec shims for the archive-manager Remote descriptors. The
@@ -367,7 +341,7 @@ export function startArchiveClient(require: HostRequire) {
 			const requestDelete = (target: ArchiveDeleteTarget) => { setError(null); setNotice(null); setDeleteTarget(target); };
 			const [query, setQuery] = (0, react.useState)(viewState?.query ?? "");
 			const [project, setProject] = (0, react.useState)(viewState?.project ?? "all");
-			const [sortBy, setSortBy] = (0, react.useState)(viewState?.sortBy ?? "updated");
+			const [sortBy, setSortBy] = (0, react.useState)(viewState?.sortBy === "created" ? "created" : "updated");
 			const [createdAtById, setCreatedAtById] = (0, react.useState)<Record<string, number>>({});
 			const [unarchivingSessionIds, setUnarchivingSessionIds] = (0, react.useState)(() => /* @__PURE__ */ new Set<string>());
 			const unarchivingSessionIdsRef = (0, react.useRef)(/* @__PURE__ */ new Set<string>());
@@ -377,6 +351,9 @@ export function startArchiveClient(require: HostRequire) {
 			const [favoriteBusy, setFavoriteBusy] = (0, react.useState)(false);
 			const favoriteLock = (0, react.useRef)(false);
 			const [favoritesOnly, setFavoritesOnly] = (0, react.useState)(false);
+            const [filtersOpen, setFiltersOpen] = react.useState(false);
+            const [organizerOpen, setOrganizerOpen] = react.useState(false);
+            const [toolsOpen, setToolsOpen] = react.useState(false);
 			const [searchScope, setSearchScope] = react.useState("title");
             const [dateFrom, setDateFrom] = react.useState("");
             const [dateTo, setDateTo] = react.useState("");
@@ -685,43 +662,69 @@ export function startArchiveClient(require: HostRequire) {
 			const deleteDialogTitle = batchScope === "ungrouped" ? t("archives.deleteUngroupedTitle") : batchScope === "workspace" ? t("archives.deleteProjectTitle", { name: deleteTarget?.kind === "batch" ? deleteTarget.title : "" }) : batchScope === "sessions" ? t("archives.deleteSelectedTitle") : t("deleteSession.title");
 			const deleteDialogDescription = deleteTarget === null ? void 0 : batchScope === "ungrouped" ? t("archives.deleteUngroupedDesc", { n: deleteTarget.kind === "batch" ? deleteTarget.count : 0 }) : batchScope === "workspace" ? t("archives.deleteProjectDesc", { name: deleteTarget?.kind === "batch" ? deleteTarget.title : "", n: deleteTarget.kind === "batch" ? deleteTarget.count : 0 }) : batchScope === "sessions" ? t("archives.deleteSelectedDesc", { n: deleteTarget.kind === "batch" ? deleteTarget.count : 0 }) : t("deleteSession.desc", { name: displayTitle(deleteTarget.kind === "session" ? deleteTarget.session : {}, t) });
 			const deleteConfirmLabel = batchScope === "ungrouped" ? t("archives.deleteUngroupedConfirm") : batchScope === "workspace" ? t("archives.deleteProjectConfirm") : batchScope === "sessions" ? t("archives.deleteSelectedConfirm") : t("deleteSession.title");
+            const clearFilters = () => { setProject("all"); setFavoritesOnly(false); setSearchScope("title"); setDateFrom(""); setDateTo(""); };
+            const activeFilters = [
+                ...project !== "all" ? [{ key: "project", label: sortedGroups.find(group => group.key === project)?.title ?? project, clear: () => setProject("all") }] : [],
+                ...favoritesOnly ? [{ key: "favorite", label: t("organizer.favoritesOnly"), clear: () => setFavoritesOnly(false) }] : [],
+                ...searchScope === "content" ? [{ key: "scope", label: t("discovery.titleAndContent"), clear: () => setSearchScope("title") }] : [],
+                ...dateFrom || dateTo ? [{ key: "date", label: [dateFrom, dateTo].filter(Boolean).join(" – "), clear: () => { setDateFrom(""); setDateTo(""); } }] : []
+            ];
 			return (0, react_jsx_runtime.jsx)(AntdProvider, { children: (0, react_jsx_runtime.jsxs)("section", {
 				className: "dsham_settings",
 				"aria-label": t("archives.title"),
-				children: [(0, react_jsx_runtime.jsx)("style", { children: ARCHIVE_TABS_CSS + ARCHIVE_SETTINGS_CSS + ARCHIVE_SETTINGS_BATCH_CSS + ARCHIVE_SETTINGS_EXTERNAL_LINK_CSS + ARCHIVE_SETTINGS_SELECTION_CSS + ARCHIVE_WORKSPACE_CONFIRM_CSS }), (0, react_jsx_runtime.jsxs)("div", {
+				children: [(0, react_jsx_runtime.jsx)("style", { children: ARCHIVE_TABS_CSS + ARCHIVE_SETTINGS_CSS + ARCHIVE_SETTINGS_BATCH_CSS + ARCHIVE_SETTINGS_EXTERNAL_LINK_CSS + ARCHIVE_SETTINGS_SELECTION_CSS + SESSION_MANAGER_LIST_CSS + ARCHIVE_WORKSPACE_CONFIRM_CSS }), (0, react_jsx_runtime.jsxs)("div", {
 					// 设置页使用独立布局容器，避免被 Codex UI 的会话 header 页签适配器识别。
 					className: "dsham_settingsHeader",
 					children: [(0, react_jsx_runtime.jsxs)("div", {
-					children: [(0, react_jsx_runtime.jsxs)("div", { className: "dsham_settingsTitleRow", children: [(0, react_jsx_runtime.jsx)("h2", { children: t("archives.title") }), (0, react_jsx_runtime.jsxs)("div", { className: "dsham_settingsLinks", children: [(0, react_jsx_runtime.jsx)(AntdButton, { size: "small", shape: "default", href: "https://github.com/hxc0624/dsh-archive-manager", target: "_blank", rel: "noreferrer", "aria-label": t("archives.viewProject"), icon: (0, react_jsx_runtime.jsx)(GithubMark16, {}), children: t("archives.viewProject") }), (0, react_jsx_runtime.jsx)(AntdButton, { size: "small", shape: "default", href: "https://github.com/hxc0624/dsh-archive-manager/issues", target: "_blank", rel: "noreferrer", "aria-label": t("archives.feedback"), icon: (0, react_jsx_runtime.jsx)(_deepseek_ai_dsh_client_ui_primitives.IconListPenOutline16, {}), children: t("archives.feedback") })] })] }), (0, react_jsx_runtime.jsx)("p", { className: "dsham_settingsIntro", children: t("archives.description") })]
-					}), react.createElement("div", tabsShell(busy || unarchivingSessionIds.size > 0, (0, react_jsx_runtime.jsx)(AntdSegmented, {
-					block: true, "aria-label": t("archives.title"), value: archiveTab === "unarchived" ? "unarchived" : "archived", onChange: (value) => switchTab(String(value) === "unarchived" ? "unarchived" : "archived"),
-					options: [{ value: "archived", label: t("archives.tab.archived") }, { value: "unarchived", label: t("archives.tab.unarchived") }]
-					})))]
-				}), (0, react_jsx_runtime.jsxs)("div", { id: "dsham-archive-panel", role: "region", "aria-label": t(archiveTab === "unarchived" ? "archives.tab.unarchived" : "archives.tab.archived"), children: [(0, react_jsx_runtime.jsxs)("div", {
+                    children: [react.createElement("div", { className: "dsham_settingsTitleRow" },
+                        react.createElement("h2", null, t("archives.title")),
+                        react.createElement(AntdDropdown, {
+                            trigger: ["click"], placement: "bottomRight", open: toolsOpen && !busy,
+                            onOpenChange: setToolsOpen,
+                            menu: { items: [
+                                ...organizeBatch && !isArchived ? [{ key: "organize", label: t("archives.idleTool"), onClick: () => { setToolsOpen(false); setOrganizerOpen(true); } }] : [],
+                                ...!favoritesReady ? [{ key: "favorites", label: t("organizer.reloadFavorites"), onClick: loadFavorites }] : [],
+                                { key: "release", label: t("archives.stableReleases"), onClick: () => { setToolsOpen(false); openStableReleaseDialog(); } },
+                                { type: "divider" as const },
+                                { key: "project", label: react.createElement("a", { className: "dsham_menuLabel", href: "https://github.com/hxc0624/dsh-archive-manager", target: "_blank", rel: "noreferrer" }, react.createElement(GithubMark16), react.createElement("span", null, t("archives.viewProject"))) },
+                                { key: "feedback", label: react.createElement("a", { className: "dsham_menuLabel", href: "https://github.com/hxc0624/dsh-archive-manager/issues", target: "_blank", rel: "noreferrer" }, react.createElement(_deepseek_ai_dsh_client_ui_primitives.IconListPenOutline16), react.createElement("span", null, t("archives.feedback"))) }
+                            ] },
+                            children: settingsButton({ variant: "ghost", disabled: busy, "aria-label": t("archives.tools"), "aria-haspopup": "menu", "aria-expanded": toolsOpen && !busy, icon: react.createElement(_deepseek_ai_dsh_client_ui_primitives.IconEllipsisOutline16) })
+                        })),
+                        react.createElement("p", { className: "dsham_settingsIntro" }, t("archives.description"))]
+                    }), react.createElement("div", tabsShell(busy || unarchivingSessionIds.size > 0,
+                        react.createElement("div", { className: "dsham_sessionTabs", role: "tablist", "aria-label": t("archives.title") },
+                            ["archived", "unarchived"].map(tab => react.createElement("button", {
+                                key: tab, id: "dsham-tab-" + tab, type: "button", role: "tab", "aria-selected": archiveTab === tab,
+                                "aria-controls": "dsham-archive-panel", tabIndex: archiveTab === tab ? 0 : -1, disabled: busy || unarchivingSessionIds.size > 0,
+                                onClick: () => switchTab(tab),
+                                onKeyDown: (event: import("react").KeyboardEvent<HTMLButtonElement>) => {
+                                    if (["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) {
+                                        event.preventDefault(); const next = event.key === "Home" ? "archived" : event.key === "End" ? "unarchived" : tab === "archived" ? "unarchived" : "archived";
+                                        switchTab(next); document.getElementById("dsham-tab-" + next)?.focus();
+                                    }
+                                },
+                                children: [t("archives.tab." + tab), react.createElement("span", { key: "count", className: "dsham_tabCount" }, tab === "archived" ? deriveArchivedGroups(sessions.byId, workspaceState.items, workspaceState.archivedSessionIds, "").reduce((n, group) => n + group.sessions.length, 0) : unarchivedSessionIds(sessions.byId, workspaceState.archivedSessionIds).length)]
+                            }))))) ]
+				}), (0, react_jsx_runtime.jsxs)("div", { id: "dsham-archive-panel", role: "tabpanel", "aria-labelledby": "dsham-tab-" + archiveTab, "aria-label": t(archiveTab === "unarchived" ? "archives.tab.unarchived" : "archives.tab.archived"), children: [(0, react_jsx_runtime.jsxs)("div", {
 					className: "dsham_settingsToolbar",
 					children: [(0, react_jsx_runtime.jsxs)("div", {
 						className: "dsham_settingsSearch",
-						children: [typeof setSessionFavorite === "function" && (0, react_jsx_runtime.jsx)(ArchiveProjectSelect, { id: "dsham-favorite-filter", value: favoritesOnly ? "favorites" : "all", disabled: busy || favoriteBusy || !favoritesReady, options: [{ value: "all", label: t("organizer.allSessions") }, { value: "favorites", label: t("organizer.favoritesOnly") }], onChange: (value) => setFavoritesOnly(value === "favorites"), "aria-label": t("organizer.favoriteFilter") }), react.createElement(ArchiveProjectSelect, { id: "dsham-search-scope", value: searchScope, "aria-label": t("discovery.scope"), disabled: busy || unarchivingSessionIds.size > 0, onChange: setSearchScope, options: [{ value: "title", label: t("discovery.titleOnly") }, { value: "content", label: t("discovery.titleAndContent") }] }), (0, react_jsx_runtime.jsx)(AntdInput, { className: "dsham_searchField", type: "search", maxLength: 200, allowClear: true, value: query, onChange: (event) => setQuery(event.target.value), placeholder: t(contentEnabled ? "discovery.searchPlaceholder" : isArchived ? "archives.searchPlaceholder" : "archives.searchUnarchived"), "aria-label": t(contentEnabled ? "discovery.searchPlaceholder" : isArchived ? "archives.searchPlaceholder" : "archives.searchUnarchived") })]
+                        children: [(0, react_jsx_runtime.jsx)(AntdInput, { className: "dsham_searchField", type: "search", maxLength: 200, allowClear: true, value: query, onChange: (event) => setQuery(event.target.value), placeholder: t(contentEnabled ? "discovery.searchPlaceholder" : isArchived ? "archives.searchPlaceholder" : "archives.searchUnarchived"), "aria-label": t(contentEnabled ? "discovery.searchPlaceholder" : isArchived ? "archives.searchPlaceholder" : "archives.searchUnarchived") }), settingsButton({ variant: "outline", "aria-expanded": filtersOpen, "aria-label": t("archives.filters"), onClick: () => setFiltersOpen(value => !value), children: t("archives.filters") })]
 					}), (0, react_jsx_runtime.jsxs)("div", {
-						className: "dsham_settingsFilters",
-						children: [(0, react_jsx_runtime.jsx)(ArchiveProjectSelect, { id: "dsham-project-filter", className: "dsham_projectFilter", value: project, options: [{ value: "all", label: t("archives.allProjects"), title: t("archives.allProjects") }, ...sortedGroups.map((group) => ({ value: group.key, label: group.title, title: group.title }))], onChange: setProject, "aria-label": t("archives.projectFilter") }), react.createElement(DiscoveryFilters, { t, from: dateFrom, to: dateTo, onFrom: setDateFrom, onTo: setDateTo, invalid: invalidDate, onClear: () => { setDateFrom(""); setDateTo(""); } }), (0, react_jsx_runtime.jsxs)("div", { className: "dsham_settingsSort", children: [(0, react_jsx_runtime.jsx)("span", { className: "dsham_settingsSortLabel", "aria-hidden": true, children: t("archives.sortLabel") }), (0, react_jsx_runtime.jsx)(ArchiveProjectSelect, { id: "dsham-sort-filter", value: sortBy, options: [{ value: "updated", label: t("archives.sortUpdated") }, { value: "created", label: t("archives.sortCreated") }, { value: "alphabetical", label: t("archives.sortAlphabetical") }, ...typeof sessionDetails === "function" ? [{ value: "turnsDesc", label: t("details.more") }, { value: "turnsAsc", label: t("details.less") }] : []], onChange: setSortBy, "aria-label": t("archives.sortBy") })] })] })]
-				}), react.createElement("style", null, discoveryCss), react.createElement(SearchStatus, { state: contentSearch, t }), react.createElement(SessionHealthPanel, { key: archiveTab, t, isArchived, items: details.items, sessions: groups.flatMap(group => group.sessions), diagnoseSession, repairSession, retry: details.retry, pending: details.pending }), organizeBatch && (0, react_jsx_runtime.jsx)(OrganizerPanel, {
-					t, archived: isArchived, busy: busy || favoriteBusy || unarchivingSessionIds.size > 0, ready: favoritesReady,
+						className: "dsham_settingsFilters", id: "dsham-session-filters", hidden: !filtersOpen,
+						children: [typeof setSessionFavorite === "function" && (0, react_jsx_runtime.jsx)(ArchiveProjectSelect, { id: "dsham-favorite-filter", value: favoritesOnly ? "favorites" : "all", disabled: busy || favoriteBusy || !favoritesReady, options: [{ value: "all", label: t("organizer.allSessions") }, { value: "favorites", label: t("organizer.favoritesOnly") }], onChange: (value) => setFavoritesOnly(value === "favorites"), "aria-label": t("organizer.favoriteFilter") }), react.createElement(ArchiveProjectSelect, { id: "dsham-search-scope", value: searchScope, "aria-label": t("discovery.scope"), disabled: busy || unarchivingSessionIds.size > 0, onChange: setSearchScope, options: [{ value: "title", label: t("discovery.titleOnly") }, { value: "content", label: t("discovery.titleAndContent") }] }), (0, react_jsx_runtime.jsx)(ArchiveProjectSelect, { id: "dsham-project-filter", className: "dsham_projectFilter", value: project, options: [{ value: "all", label: t("archives.allProjects"), title: t("archives.allProjects") }, ...sortedGroups.map((group) => ({ value: group.key, label: group.title, title: group.title }))], onChange: setProject, "aria-label": t("archives.projectFilter") }), react.createElement(DiscoveryFilters, { t, from: dateFrom, to: dateTo, onFrom: setDateFrom, onTo: setDateTo, invalid: invalidDate, onClear: () => { setDateFrom(""); setDateTo(""); } })] })]
+                    }), activeFilters.length > 0 && react.createElement("div", { className: "dsham_activeFilters", "aria-label": t("archives.activeFilters") },
+                        activeFilters.map(filter => react.createElement("button", { key: filter.key, type: "button", onClick: filter.clear, "aria-label": t("archives.removeFilter", { name: filter.label }) }, filter.label, react.createElement("span", { "aria-hidden": true }, " ×"))),
+                        react.createElement("button", { type: "button", className: "dsham_clearFilters", onClick: clearFilters }, t("archives.clearFilters"))),
+                    react.createElement("div", { className: "dsham_resultSummary" }, react.createElement("span", { role: "status" }, t("archives.resultCount", { n: visibleSessionIds.length })), (0, react_jsx_runtime.jsxs)("div", { className: "dsham_settingsSort", children: [(0, react_jsx_runtime.jsx)("span", { className: "dsham_settingsSortLabel", "aria-hidden": true, children: t("archives.sortLabel") }), (0, react_jsx_runtime.jsx)(ArchiveProjectSelect, { id: "dsham-sort-filter", value: sortBy, options: [{ value: "updated", label: t("archives.sortUpdated") }, { value: "created", label: t("archives.sortCreated") }], onChange: setSortBy, "aria-label": t("archives.sortBy") })] })), react.createElement("style", null, discoveryCss), react.createElement(SearchStatus, { state: contentSearch, t }), react.createElement(SessionHealthPanel, { key: archiveTab, t, isArchived, items: details.items, sessions: groups.flatMap(group => group.sessions), diagnoseSession, repairSession, retry: details.retry, pending: details.pending }), organizeBatch && (0, react_jsx_runtime.jsx)(OrganizerPanel, {
+					showControls: false, t, archived: isArchived, busy: busy || favoriteBusy || unarchivingSessionIds.size > 0, ready: favoritesReady,
 					days: idleDays, onDays: setIdleDays, count: idleCandidates.length,
 					onPreview: () => { requestArchive(idleCandidates); setIdleRequest(true); },
 					progress: batchProgress, result: batchResult?.tab === archiveTab ? batchResult : null,
 					onRetry: () => { const retry = retryBatch.current; if (retry) { if (retry.kind === "delete") requestDelete({ kind: "batch", target: { scope: "sessions", sessionIds: retry.ids }, count: retry.ids.length }); else executeBatch(retry.kind, retry.ids, { idle: retry.idle, retry: true }); } },
 					undoCount: undoableArchiveCount,
 					onUndo: () => executeBatch("undo", lastArchive, { retry: true }), onReload: loadFavorites
-				}), groups.length > 0 && (0, react_jsx_runtime.jsx)(ArchiveSelectionToolbar, {
-					selectedCount: selectedSessionIds.length,
-					hiddenCount: selectedSessionIds.length - selectedVisibleCount,
-					allVisibleSelected, selectedVisibleCount, visibleCount: visibleSessionIds.length, busy, t,
-					onToggle: toggleVisibleSelection,
-					onClear: () => setSelectedSessionIds([]),
-					onArchive: isArchived ? undefined : () => requestArchive([...selectedSessionIds]),
-					onRestore: onSelectedUnarchive,
-					onDelete: () => requestDelete({ kind: "batch", target: { scope: "sessions", sessionIds: selectedSessionIds }, count: selectedSessionIds.length })
 				}), groups.length === 0 ? (0, react_jsx_runtime.jsx)("div", { className: "dsham_settingsEmpty", children: t(isArchived ? "archives.empty" : "archives.emptyUnarchived") }) : filteredGroups.length === 0 ? (0, react_jsx_runtime.jsx)("div", { className: "dsham_settingsEmpty", children: contentSearch.status === "loading" || contentSearch.status === "error" || contentSearch.failures.length ? null : t("archives.emptyFiltered") }) : filteredGroups.map((group) => {
 					const target = archivedBatchTargetForGroup(group.key);
 					const groupSessionIds = groups.find((item) => item.key === group.key)?.sessions.map((session) => session.id) ?? [];
@@ -752,7 +755,21 @@ export function startArchiveClient(require: HostRequire) {
                 }, session.id))
 						})]
 					}, group.key);
-				}), react.createElement(SettingsModal, {
+				}), groups.length > 0 && (0, react_jsx_runtime.jsx)(ArchiveSelectionToolbar, {
+					selectedCount: selectedSessionIds.length,
+					hiddenCount: selectedSessionIds.length - selectedVisibleCount,
+					allVisibleSelected, selectedVisibleCount, visibleCount: visibleSessionIds.length, busy, t,
+					onToggle: toggleVisibleSelection,
+					onClear: () => setSelectedSessionIds([]),
+					onArchive: isArchived ? undefined : () => requestArchive([...selectedSessionIds]),
+					onRestore: onSelectedUnarchive,
+					onDelete: () => requestDelete({ kind: "batch", target: { scope: "sessions", sessionIds: selectedSessionIds }, count: selectedSessionIds.length })
+				}), react.createElement("p", { className: "dsham_maintenanceNote" }, t("archives.localMaintenance")),
+                react.createElement(SettingsModal, { open: organizerOpen && !isArchived, onClose: () => setOrganizerOpen(false), title: t("archives.idleTool"), width: 520,
+                    footer: settingsButton({ onClick: () => setOrganizerOpen(false), children: t("cancel") }),
+                    children: react.createElement(OrganizerPanel, { t, archived: false, busy, ready: favoritesReady, days: idleDays, onDays: setIdleDays, count: idleCandidates.length,
+                        onPreview: () => { setOrganizerOpen(false); requestArchive(idleCandidates); setIdleRequest(true); }, onRetry: () => {}, undoCount: 0, onUndo: () => {}, onReload: loadFavorites })
+                }), react.createElement(SettingsModal, {
                     width: 900, open: preview.target !== null, onClose: preview.close, title: preview.target ? displayTitle(preview.target.session, t) : t("discovery.preview"),
                     footer: settingsButton({ disabled: busy, onClick: () => { if (preview.target) { const session = preview.target.session; preview.close(); return viewConversation(session); } }, children: t("discovery.openFull") }),
                     children: react.createElement(PreviewContent, { preview, t, MarkdownText: _deepseek_ai_dsh_client_ui_primitives.MarkdownText })
@@ -3421,6 +3438,7 @@ export function startArchiveClient(require: HostRequire) {
 		const ARCHIVE_SETTINGS_EXTERNAL_LINK_CSS = ".dsham_settingsTitleRow{display:flex;align-items:center;gap:8px 12px;min-width:0;flex-wrap:wrap}.dsham_settingsLinks{display:flex;align-items:center;gap:8px;flex-wrap:wrap}@media(max-width:720px){.dsham_settingsTitleRow{flex-wrap:wrap}}";
 		const ARCHIVE_WORKSPACE_CONFIRM_CSS = ".dsham_archiveWorkspaceConfirm{color:var(--dsw-alias-state-error-primary)!important;background:transparent!important;border-color:var(--dsw-alias-state-error-primary)!important}.dsham_archiveWorkspaceConfirm:hover:not(:disabled){background:color-mix(in srgb,var(--dsw-alias-state-error-primary) 20%,transparent)!important}.dsham_archiveWorkspaceConfirm:focus-visible{outline:2px solid var(--dsw-alias-state-error-secondary);outline-offset:2px}.dsham_archiveWorkspaceConfirm:disabled{cursor:not-allowed;opacity:.5}";
 		const ARCHIVE_SETTINGS_SELECTION_CSS = ".dsham_settingsSelection{margin:-8px 0 16px;padding:4px 0 12px;border-bottom:1px solid var(--dsw-alias-border-l2)}.dsham_settingsSelectionMain{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;min-height:36px}.dsham_settingsSelectionSummary{display:flex;flex-wrap:wrap;align-items:center;gap:12px;min-width:0;max-width:100%}.dsham_settingsSelectionToggle{display:inline-flex;flex:none;white-space:nowrap;align-items:center;gap:12px;color:var(--dsw-alias-label-primary);font-size:13px;line-height:20px;cursor:pointer}.dsham_settingsSelectionClear{flex:none;min-height:28px;padding:0 0 0 12px;border:0;border-left:1px solid var(--dsw-alias-border-l2);background:transparent;color:var(--dsw-alias-state-business-primary,#3b82f6);font:inherit;font-size:13px;white-space:nowrap;cursor:pointer}.dsham_settingsSelectionClear:hover:not(:disabled){text-decoration:underline}.dsham_settingsSelectionActions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;max-width:100%;margin-left:auto}.dsham_settingsSelectionAction{flex:none;white-space:nowrap;min-height:32px;padding:0 14px;color:var(--dsw-alias-label-primary);background:transparent;border:1px solid var(--dsw-alias-border-l2);border-radius:7px;cursor:pointer;font:inherit;font-size:13px;font-weight:500}.dsham_settingsSelectionAction:hover:not(:disabled){background:var(--dsw-alias-interactive-bg-hover)}.dsham_settingsSelectionArchive,.dsham_settingsSelectionScope{margin:8px 0 0;color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:20px;overflow-wrap:anywhere}.dsham_settingsSelectionAction:disabled,.dsham_settingsSelectionClear:disabled{cursor:not-allowed;opacity:.5}.dsham_settingsSelectionAction:focus-visible,.dsham_settingsSelectionClear:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary,#3b82f6);outline-offset:3px}";
+		const SESSION_MANAGER_LIST_CSS = "\n.dsham_settingsHeader{gap:20px;margin-bottom:20px}.dsham_settingsTitleRow{justify-content:space-between;flex-wrap:nowrap}.dsham_settingsIntro{margin:6px 0 0;font-size:13px}.dsham_sessionTabs{display:flex;gap:24px;border-bottom:1px solid var(--dsw-alias-border-l2)}.dsham_sessionTabs button{display:flex;align-items:center;gap:8px;padding:0 0 12px;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--dsw-alias-label-secondary);font:inherit;font-size:14px;cursor:pointer}.dsham_sessionTabs button[aria-selected=true]{border-bottom-color:var(--dsw-alias-label-primary);color:var(--dsw-alias-label-primary);font-weight:600}.dsham_sessionTabs button:focus-visible,.dsham_activeFilters button:focus-visible{outline:2px solid var(--dsw-alias-state-business-primary);outline-offset:3px}.dsham_tabCount{font-size:11px;color:var(--dsw-alias-label-tertiary);font-weight:400}.dsham_settingsToolbar{gap:12px;margin:0 0 12px}.dsham_settingsSearch{gap:10px}.dsham_settingsSearch .ant-input-affix-wrapper{min-height:38px;border-radius:8px}.dsham_settingsFilters{flex-wrap:wrap;gap:10px;padding:12px;background:var(--dsw-alias-bg-layer-2);border-radius:8px}.dsham_settingsFilters[hidden]{display:none}.dsham_settingsFilters>.dsham_settingsFilter,.dsham_settingsFilters>.dsham_projectFilter{width:auto;min-width:120px;max-width:none;flex:1 1 140px}.dsham_activeFilters{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}.dsham_activeFilters button{max-width:100%;overflow-wrap:anywhere;border:1px solid var(--dsw-alias-border-l2);border-radius:6px;padding:3px 8px;font:inherit;font-size:12px;color:var(--dsw-alias-label-secondary);background:transparent;cursor:pointer}.dsham_activeFilters .dsham_clearFilters{border-color:transparent;color:var(--dsw-alias-label-tertiary)}.dsham_resultSummary{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 18px;font-size:12px;color:var(--dsw-alias-label-tertiary)}.dsham_settingsSort .dsham_settingsFilter{width:138px}.dsham_settingsSortLabel{display:none}.dsham_settingsGroup{margin-bottom:24px}.dsham_settingsGroupHeading{margin:0 0 6px}.dsham_settingsList{border:0;border-radius:0;background:transparent}.dsham_settingsRow,.ant-list-item.dsham_settingsRow{min-height:68px;padding:12px 8px;gap:12px;border-bottom:1px solid var(--dsw-alias-border-l2);border-radius:0}.dsham_settingsRow:last-child,.ant-list-item.dsham_settingsRow:last-child{border-bottom:1px solid var(--dsw-alias-border-l2)}.dsham_settingsTitleLink{font-size:14px;font-weight:500}.dsham_settingsMeta{margin-top:4px}.dsham_settingsActions{gap:0}.dsham_settingsActions .ant-btn{width:30px;min-width:30px;height:30px;padding:0;border-radius:6px}.dsham_settingsSelection{margin:8px 0 0;padding:12px 0;border-bottom:0;border-top:1px solid var(--dsw-alias-border-l2)}.dsham_settingsSelection:has(.dsham_settingsSelectionActions){position:sticky;bottom:0;z-index:2;background:var(--dsw-alias-bg-layer-1,var(--dsw-alias-bg-layer-2));padding:12px;border:1px solid var(--dsw-alias-border-l2);border-radius:8px}.dsham_maintenanceNote{margin:12px 0 0;font-size:11px;line-height:18px;color:var(--dsw-alias-label-tertiary)}@container(max-width:400px){.dsham_settingsRow,.ant-list-item.dsham_settingsRow{gap:8px;padding:10px 0;grid-template-columns:16px minmax(0,1fr) auto}.dsham_settingsTitleLink{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:20px}.dsham_sessionTabs{gap:18px}.dsham_settingsFilters{padding:10px}.dsham_settingsGroup{margin-bottom:22px}.dsham_settingsSort .dsham_settingsFilter{width:124px}}\n";
 		const ARCHIVE_SETTINGS_LAYOUT_OVERRIDE = ".dsham_settings{margin:0 auto!important}@media(max-width:720px){.dsham_settings{margin:0 auto!important}}";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify("dsh-archive-manager/ArchiveSettings.layout.css") + "]") === null) {
 			const tag = document.createElement("style");
@@ -3607,8 +3625,8 @@ export function startArchiveClient(require: HostRequire) {
 			return result;
 		}
 		/**
-		* 归档设置页排序：时间排序同时按每组首条会话排列项目，字母排序则
-		* 同时排列项目名和组内标题；所有输入均复制后排序，不改写 store 快照。
+		* 会话管理按更新时间或创建时间排列项目与组内会话；
+		* 所有输入均复制后排序，不改写 store 快照。
 		*/
 		function sortArchivedGroups(groups: readonly ArchivedGroup[], sortBy: string, createdAtById: Record<string, number>, t: Translate, details: Record<string, SessionDetail> = {}) {
 			const compareText = (left: unknown, right: unknown) => String(left).localeCompare(String(right), void 0, { numeric: true, sensitivity: "base" });
@@ -3617,26 +3635,14 @@ export function startArchiveClient(require: HostRequire) {
 				return typeof value === "number" && Number.isFinite(value) ? value : Number.NEGATIVE_INFINITY;
 			};
 			const compareSessions = (left: ClientSession, right: ClientSession) => {
-                if (sortBy === "turnsAsc" || sortBy === "turnsDesc") {
-                    const difference = compareTurnCounts(details[left.id]?.turnCount, details[right.id]?.turnCount, sortBy);
-                    if (difference) return difference;
-                }
-				if (sortBy !== "alphabetical") {
-					const byTime = timestampOf(right) - timestampOf(left);
-					if (Number.isFinite(byTime) && byTime !== 0) return byTime;
-				}
+				const byTime = timestampOf(right) - timestampOf(left);
+				if (Number.isFinite(byTime) && byTime !== 0) return byTime;
 				return compareText(displayTitle(left, t), displayTitle(right, t)) || compareText(left.id, right.id);
 			};
 			const result = groups.map((group) => ({ ...group, sessions: [...group.sessions].sort(compareSessions) }));
 			return result.sort((left, right) => {
-                if (sortBy === "turnsAsc" || sortBy === "turnsDesc") {
-                    const difference = compareTurnCounts(details[left.sessions[0]?.id]?.turnCount, details[right.sessions[0]?.id]?.turnCount, sortBy);
-                    if (difference) return difference;
-                }
-				if (sortBy !== "alphabetical") {
-					const byTime = timestampOf(right.sessions[0]) - timestampOf(left.sessions[0]);
-					if (Number.isFinite(byTime) && byTime !== 0) return byTime;
-				}
+				const byTime = timestampOf(right.sessions[0]) - timestampOf(left.sessions[0]);
+				if (Number.isFinite(byTime) && byTime !== 0) return byTime;
 				return compareText(left.title, right.title) || compareText(left.key, right.key);
 			});
 		}
@@ -3699,8 +3705,9 @@ export function startArchiveClient(require: HostRequire) {
 			"menu.deleteSession": "删除会话",
 			"archived.badge": "归档会话",
 			"archived.notOpenable": "已归档，取消归档后可继续对话",
-			"archives.title": "DSH 增强工具箱",
-			"archives.description": "会话管理：归档、恢复、搜索和批量整理对话。",
+			"archives.title": "会话管理",
+			"archives.description": "查找历史，整理当前会话。",
+            "archives.tools": "更多", "archives.filters": "筛选", "archives.activeFilters": "已启用的筛选", "archives.removeFilter": "移除筛选：{name}", "archives.clearFilters": "清除筛选", "archives.resultCount": "{n} 个会话", "archives.idleTool": "整理闲置会话", "archives.stableReleases": "检查 GitHub 稳定版", "archives.localMaintenance": "本地源码维护 · GitHub 稳定版本按需发布",
 			"archives.viewProject": "GitHub",
 			"archives.feedback": "问题反馈",
 			"archives.empty": "暂无已归档会话",
@@ -3710,7 +3717,6 @@ export function startArchiveClient(require: HostRequire) {
 			"archives.sortLabel": "排序",
 			"archives.sortUpdated": "更新时间",
 			"archives.sortCreated": "创建时间",
-			"archives.sortAlphabetical": "按字母顺序",
 			"archives.projectFilter": "按项目筛选",
 			"archives.allProjects": "所有项目",
 			"archives.sessionCount": "{n} 个聊天",
@@ -3860,8 +3866,9 @@ export function startArchiveClient(require: HostRequire) {
 			"menu.deleteSession": "Delete session",
 			"archived.badge": "Archived sessions",
 			"archived.notOpenable": "This session is archived. Unarchive it to continue the conversation.",
-			"archives.title": "HXC DSH Toolkit",
-			"archives.description": "Manage sessions: archive, restore, search, and organize conversations in bulk.",
+			"archives.title": "Session Manager",
+			"archives.description": "Find history and organize your sessions.",
+            "archives.tools": "More", "archives.filters": "Filters", "archives.activeFilters": "Active filters", "archives.removeFilter": "Remove filter: {name}", "archives.clearFilters": "Clear filters", "archives.resultCount": "{n} sessions", "archives.idleTool": "Organize idle sessions", "archives.stableReleases": "Check GitHub stable release", "archives.localMaintenance": "Maintained from local source · GitHub stable releases published as needed",
 			"archives.viewProject": "GitHub",
 			"archives.feedback": "Issues",
 			"archives.empty": "No archived sessions.",
@@ -3871,7 +3878,6 @@ export function startArchiveClient(require: HostRequire) {
 			"archives.sortLabel": "Sort",
 			"archives.sortUpdated": "Last updated",
 			"archives.sortCreated": "Created",
-			"archives.sortAlphabetical": "Alphabetical",
 			"archives.projectFilter": "Filter by project",
 			"archives.allProjects": "All projects",
 			"archives.sessionCount": "{n} chats",
@@ -4074,11 +4080,8 @@ export function startArchiveClient(require: HostRequire) {
 			ctx.effect(() => observePluginUpdate({
 				endpoint: "/api/michengai/dsh-archive-manager/update",
 				packageName: "@michengai/dsh-archive-manager",
-				titleRowSelector: ".dsham_settingsTitleRow",
-				linksSelector: ".dsham_settingsLinks",
-				zhName: "DSH 增强工具箱",
-				enName: "HXC DSH Toolkit",
-				createIcon: createPluginUpdateIcon
+				zhName: "会话管理",
+				enName: "Session Manager"
 			}), "dsh-archive-manager: plugin update ui");
 			// 侧栏先注册；导航适配等官方 uiWorkspace 出现再绑，否则打开归档会被官方清掉。
 			const uiWorkspaceAt = () => ctx.get("uiWorkspace");
@@ -4409,47 +4412,7 @@ export function startArchiveClient(require: HostRequire) {
             try { await fork(sessionId); }
             catch (reason) { notify(formatForkError(reason, t)); }
         }
-        exports.__test = {
-            forkWithFeedback,
-			unarchivedSessionIds,
-			ArchiveSelectionToolbar,
-			ArchivedSessionsSection,
-			zh, en,
-			displayTitle,
-			sessionVisible,
-			indexSubagentDescendants,
-			isUnknownSessionError,
-			deriveGroups,
-			deriveFlat,
-			deriveSearchResults,
-			deriveArchivedGroups,
-			sortArchivedGroups,
-			deriveArchivedBatchIds,
-			archivedSessionIdsInGroups,
-			pruneArchivedSelection,
-			toggleArchivedSelection,
-			archivedDeleteFeedback,
-			archiveableWorkspaceSessionCount,
-			archiveWorkspaceDialogTarget,
-			archiveWorkspaceDialogFailureState,
-			activeSessionActivity,
-			activeSessionRefusal,
-			activeArchiveFromMessage,
-			archiveSessionsViaOfficial,
-			unarchiveSessionsViaOfficial,
-			createUnarchiveSession,
-			createWorkspaceViewStore,
-			migrateWorkspaceViewPersist,
-			WORKSPACE_VIEW_PERSIST_KEY,
-			LEGACY_WORKSPACE_VIEW_PERSIST_KEY,
-			bindObservable,
-			hasSplitClientStore,
-			groupByWorkspace,
-			byRecency,
-			ARCHIVE_MANAGER_REMOTE,
-			currentSessionId,
-			ensureLegacyWorkspaceCss
-		};
+
 		exports.apply = apply;
 		exports.inject = inject;
 		return module.exports;

@@ -338,6 +338,10 @@ function registerPluginUpdater(ctx: Context, options: UpdateOptions) {
           json(response, 403, { error: "\u5DF2\u62D2\u7EDD\u975E\u672C\u673A\u540C\u6E90\u66F4\u65B0\u8BF7\u6C42\u3002" });
           return;
         }
+        if (request.headers["x-dsham-replace-local"] !== "1") {
+          json(response, 409, { error: "请先确认安装稳定版将替换当前插件的本地构建。" });
+          return;
+        }
         if (installing) {
           json(response, 409, { error: "\u5F53\u524D\u63D2\u4EF6\u6B63\u5728\u66F4\u65B0\uFF0C\u8BF7\u7A0D\u5019\u3002" });
           return;

@@ -1,4 +1,4 @@
-// HXC DSH Toolkit GitHub releases. No npm publishing or npm credentials.
+// Session Manager GitHub releases. No npm publishing or npm credentials.
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -14,8 +14,8 @@ const gh = async (args) => (await exec("gh", args, { windowsHide: true })).stdou
 
 export function validateRelease(tag, manifest, head, taggedHead) {
   assert.equal(manifest.name, "@michengai/dsh-archive-manager", "Keep the installed plugin identity");
-  assert.equal(manifest.private, true, "Toolkit releases must not publish to npm");
-  assert.ok(isStableVersion(manifest.version), "Use independent X.Y.Z stable versions for new Toolkit releases");
+  assert.equal(manifest.private, true, "Session Manager releases must not publish to npm");
+  assert.ok(isStableVersion(manifest.version), "Use independent X.Y.Z stable versions for new Session Manager releases");
   assert.equal(tag, `v${manifest.version}`, "Release tag must match package.json");
   assert.equal(head.trim(), taggedHead.trim(), "Check out the exact tagged commit");
 }
@@ -23,7 +23,7 @@ export function validateRelease(tag, manifest, head, taggedHead) {
 async function validateTag(tag) {
   const manifest = JSON.parse(await readFile("package.json", "utf8"));
   assert.equal(tag, `v${manifest.version}`, "Release tag must match package.json");
-  assert.ok(isStableVersion(manifest.version), "Invalid Toolkit stable version");
+  assert.ok(isStableVersion(manifest.version), "Invalid Session Manager stable version");
   const [head, tagged] = await Promise.all([
     exec("git", ["rev-parse", "HEAD"], { windowsHide: true }),
     exec("git", ["rev-parse", `refs/tags/${tag}^{commit}`], { windowsHide: true }),
@@ -45,7 +45,7 @@ export async function writeChecksum(directory) {
 }
 
 export async function publishRelease(tag, directory, notes, run = gh) {
-  assert.ok(tag.startsWith("v") && isStableVersion(tag.slice(1)), "Invalid Toolkit stable release tag");
+  assert.ok(tag.startsWith("v") && isStableVersion(tag.slice(1)), "Invalid Session Manager stable release tag");
   // A failed read must never be interpreted as permission to publish.
   const pages = JSON.parse(await run(["api", `repos/${RELEASE_REPOSITORY}/releases?per_page=100`, "--paginate", "--slurp"]));
   assert.ok(Array.isArray(pages) && pages.every(Array.isArray), "Unexpected release response");

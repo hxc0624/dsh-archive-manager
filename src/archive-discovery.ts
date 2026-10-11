@@ -69,13 +69,6 @@ export function countConversationTurns(events: readonly unknown[]) {
     return !kind || kind === "user";
   }).length;
 }
-/** 未知轮次始终排在已知值之后，避免读取失败被误当作零轮。 */
-export function compareTurnCounts(left: number | null | undefined, right: number | null | undefined, order: string) {
-  const a = typeof left === "number" && Number.isSafeInteger(left) && left >= 0;
-  const b = typeof right === "number" && Number.isSafeInteger(right) && right >= 0;
-  if (a !== b) return a ? -1 : 1;
-  return a && b ? (order === "turnsAsc" ? left - right : right - left) : 0;
-}
 export async function copySessionText(text: string, clipboard = globalThis.navigator?.clipboard) {
   if (typeof text !== "string" || !text) throw Object.assign(new Error("没有可复制的内容"), { code: "copy.empty" });
   if (!clipboard?.writeText) throw Object.assign(new Error("当前环境不支持剪贴板，请在 HTTPS 或本机地址中打开页面"), { code: "copy.unavailable" });

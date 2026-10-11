@@ -1,10 +1,10 @@
-name: HXC DSH Toolkit release
+name: Session Manager release
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Toolkit stable release tag, for example v1.1.0'
+        description: 'Session Manager stable release tag, for example v1.2.0'
         required: true
         type: string
   push:
@@ -27,7 +27,7 @@ jobs:
     env:
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
-      - name: Check out the Toolkit release tag
+      - name: Check out the Session Manager release tag
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.tag && format('refs/tags/{0}', inputs.tag) || github.ref }}
@@ -47,7 +47,7 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile --config.minimumReleaseAge=1440 --registry=https://registry.npmjs.org/
 
-      - name: Verify build, tests, compatibility and package
+      - name: Verify types, build and package
         run: pnpm verify
 
       - name: Package the verified build

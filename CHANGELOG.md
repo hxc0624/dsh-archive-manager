@@ -4,7 +4,13 @@
 
 Published release notes are retained below; new versions are added without removing earlier entries.
 
-## Unreleased
+## 1.2.0 - 2026-10-11
+
+- Remove test fixtures, local backups, obsolete screenshots and duplicate maintenance notes; retain current source and distribution files.
+
+- Limit Session Manager sorting to update and creation time; fix the GitHub icon and text spacing in the More menu.
+- Maintain local source with a verified build-and-sync command; check and install GitHub stable releases manually. Session Manager uses a lightweight list, collapsible filters, and a selection footer.
+- Rename the plugin to Session Manager (会话管理) across plugin metadata, Settings, and the update dialog.
 
 ## 1.1.0 - 2026-10-09
 

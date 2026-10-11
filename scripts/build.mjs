@@ -96,9 +96,6 @@ try {
 ${thirdPartyNotices}
 `);
 
-	if (process.env.DSH_ARCHIVE_MANAGER_TEST_FAIL_BEFORE_PUBLISH === "1") {
-		throw new Error("测试：在发布构建产物前中断");
-	}
 
 	if (await exists(outputDirectory)) {
 		await rename(outputDirectory, backupDirectory);

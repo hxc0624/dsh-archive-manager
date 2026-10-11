@@ -1,5 +1,5 @@
-// Toolkit releases keep the existing package ID and distribution URLs for installed users.
-export const PRODUCT_NAME = "HXC DSH Toolkit";
+// Session Manager releases keep the existing package ID and distribution URLs for installed users.
+export const PRODUCT_NAME = "Session Manager";
 export const RELEASE_REPOSITORY = "hxc0624/dsh-archive-manager";
 export const RELEASE_ASSET = "dsh-archive-manager.tgz";
 export const RELEASES_URL = `https://github.com/${RELEASE_REPOSITORY}/releases`;
@@ -60,7 +60,7 @@ function comparePrerelease(left: readonly string[], right: readonly string[]): n
 /** The latest alias is only for a manual command when checking is unavailable. */
 export function releaseAssetUrl(version: string): string {
 	if (version === "latest") return `${RELEASES_URL}/latest/download/${RELEASE_ASSET}`;
-	if (!isReleaseVersion(version)) throw new Error("Invalid Toolkit release version");
+	if (!isReleaseVersion(version)) throw new Error("Invalid Session Manager release version");
 	return `${RELEASES_URL}/download/v${version}/${RELEASE_ASSET}`;
 }
 
