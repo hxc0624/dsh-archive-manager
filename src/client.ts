@@ -131,12 +131,12 @@ export function startArchiveClient(require: HostRequire) {
 		* 调用走 typert gateway SRC 路径，不影响既有 `/api/workspace.*` 网关。
 		*/
 		const ARCHIVE_MANAGER_REMOTE = {
-			package: "@michengai/dsh-archive-manager",
+			package: "@hxc0624/dsh-session-manager",
 			descriptors: [
 				...favoriteInvocations(),
 				...discoveryInvocations(),
 				{
-					id: "@michengai/dsh-archive-manager#workspaceRegistry/unarchiveSession",
+					id: "@hxc0624/dsh-session-manager#workspaceRegistry/unarchiveSession",
 					service: "workspaceRegistry",
 					namespace: "workspaceRegistry",
 					method: "unarchiveSession",
@@ -147,11 +147,11 @@ export function startArchiveClient(require: HostRequire) {
 						source: "json",
 						codec: strictCodec("@deepseek-ai/dsh-session/types#SessionId", sessionIdSchema)
 					}],
-					result: strictCodec("@michengai/dsh-archive-manager/types#ArchivedSessionIds", archivedSetSchema),
-					sourceLocation: { file: "@michengai/dsh-archive-manager/lib/workspace.js", line: 1, column: 1 }
+					result: strictCodec("@hxc0624/dsh-session-manager/types#ArchivedSessionIds", archivedSetSchema),
+					sourceLocation: { file: "@hxc0624/dsh-session-manager/lib/workspace.js", line: 1, column: 1 }
 				},
 				{
-					id: "@michengai/dsh-archive-manager#workspaceRegistry/deleteSession",
+					id: "@hxc0624/dsh-session-manager#workspaceRegistry/deleteSession",
 					service: "workspaceRegistry",
 					namespace: "workspaceRegistry",
 					method: "deleteSession",
@@ -162,11 +162,11 @@ export function startArchiveClient(require: HostRequire) {
 						source: "json",
 						codec: strictCodec("@deepseek-ai/dsh-session/types#SessionId", sessionIdSchema)
 					}],
-					result: strictCodec("@michengai/dsh-archive-manager/types#Deleted", deletedSchema),
-					sourceLocation: { file: "@michengai/dsh-archive-manager/lib/workspace.js", line: 1, column: 1 }
+					result: strictCodec("@hxc0624/dsh-session-manager/types#Deleted", deletedSchema),
+					sourceLocation: { file: "@hxc0624/dsh-session-manager/lib/workspace.js", line: 1, column: 1 }
 				},
 				{
-					id: "@michengai/dsh-archive-manager#workspaceRegistry/deleteArchivedSessions",
+					id: "@hxc0624/dsh-session-manager#workspaceRegistry/deleteArchivedSessions",
 					service: "workspaceRegistry",
 					namespace: "workspaceRegistry",
 					method: "deleteArchivedSessions",
@@ -175,20 +175,20 @@ export function startArchiveClient(require: HostRequire) {
 						name: "target",
 						wire: "target",
 						source: "json",
-						codec: strictCodec("@michengai/dsh-archive-manager/types#ArchivedBatchTarget", archivedBatchTargetSchema)
+						codec: strictCodec("@hxc0624/dsh-session-manager/types#ArchivedBatchTarget", archivedBatchTargetSchema)
 					}],
-					result: strictCodec("@michengai/dsh-archive-manager/types#DeletedBatch", deletedBatchSchema),
-					sourceLocation: { file: "@michengai/dsh-archive-manager/lib/workspace.js", line: 1, column: 1 }
+					result: strictCodec("@hxc0624/dsh-session-manager/types#DeletedBatch", deletedBatchSchema),
+					sourceLocation: { file: "@hxc0624/dsh-session-manager/lib/workspace.js", line: 1, column: 1 }
 				},
 				{
-					id: "@michengai/dsh-archive-manager#workspaceRegistry/archivedSessionMetadata",
+					id: "@hxc0624/dsh-session-manager#workspaceRegistry/archivedSessionMetadata",
 					service: "workspaceRegistry",
 					namespace: "workspaceRegistry",
 					method: "archivedSessionMetadata",
 					invocation: { kind: "direct" },
 					parameters: [],
-					result: strictCodec("@michengai/dsh-archive-manager/types#ArchivedSessionMetadata", archivedSessionMetadataSchema),
-					sourceLocation: { file: "@michengai/dsh-archive-manager/lib/workspace.js", line: 1, column: 1 }
+					result: strictCodec("@hxc0624/dsh-session-manager/types#ArchivedSessionMetadata", archivedSessionMetadataSchema),
+					sourceLocation: { file: "@hxc0624/dsh-session-manager/lib/workspace.js", line: 1, column: 1 }
 				},
 			]
 		};
@@ -206,7 +206,7 @@ export function startArchiveClient(require: HostRequire) {
 		const ARCHIVED_CSS = ".dshamRow_sessionRow.dsham_archivedRow{box-sizing:border-box;cursor:default;min-height:64px;height:auto;background:var(--dsw-alias-button-elevated-fill);border:1px solid var(--dsw-alias-border-l2);border-radius:16px;gap:12px;margin:8px 0;padding:10px 16px}.dshamRow_sessionRow.dsham_archivedRow:hover{background:var(--dsw-alias-button-elevated-fill);border-color:var(--dsw-alias-border-l3)}.dshamRow_searchResultRow.dsham_archivedRow{background:var(--dsw-alias-button-elevated-fill);border:1px solid var(--dsw-alias-border-l2);border-radius:16px;margin:8px 0;padding:10px 16px}.dsham_archivedTitle{color:var(--dsw-alias-label-primary);font-weight:600}.dsham_archivedBadge{display:none}.dsham_archiveCardContent{min-width:0;flex:1;flex-direction:column;gap:2px;display:flex}.dsham_archiveCardMeta{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}.dshamRow_sessionRow.dsham_archivedRow>.dshamRow_time,.dshamRow_sessionRow.dsham_archivedRow>.dshamRow_rowActions{display:none}.dsham_archiveCardActions{align-items:center;gap:12px;display:inline-flex}.dsham_archiveCardActions button{cursor:pointer;border:none;flex:none}.dsham_archiveCardDelete{width:28px;height:28px;color:var(--dsw-alias-label-tertiary);background:transparent;border-radius:8px;align-items:center;justify-content:center;display:inline-flex}.dsham_archiveCardDelete:hover{color:var(--dsw-alias-state-error-primary);background:var(--dsw-alias-interactive-bg-hover)}.dsham_archiveCardUnarchive{height:32px;color:var(--dsw-alias-label-primary);background:var(--dsw-alias-button-elevated-fill);border:1px solid var(--dsw-alias-border-l2)!important;border-radius:10px;padding:0 12px;font-size:13px;font-weight:600;line-height:20px}.dsham_archiveCardUnarchive:hover{background:var(--dsw-alias-interactive-bg-hover)}";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify("dsh-archive-manager/Archived.module.css") + "]") === null) {
 			const tag = document.createElement("style");
-			tag.dataset.plugin = "@michengai/dsh-archive-manager";
+			tag.dataset.plugin = "@hxc0624/dsh-session-manager";
 			tag.dataset.pluginCss = "dsh-archive-manager/Archived.module.css";
 			tag.textContent = ARCHIVED_CSS;
 			document.head.appendChild(tag);
@@ -3442,7 +3442,7 @@ export function startArchiveClient(require: HostRequire) {
 		const ARCHIVE_SETTINGS_LAYOUT_OVERRIDE = ".dsham_settings{margin:0 auto!important}@media(max-width:720px){.dsham_settings{margin:0 auto!important}}";
 		if (typeof document !== "undefined" && document.querySelector("style[data-plugin-css=" + JSON.stringify("dsh-archive-manager/ArchiveSettings.layout.css") + "]") === null) {
 			const tag = document.createElement("style");
-			tag.dataset.plugin = "@michengai/dsh-archive-manager";
+			tag.dataset.plugin = "@hxc0624/dsh-session-manager";
 			tag.dataset.pluginCss = "dsh-archive-manager/ArchiveSettings.layout.css";
 			tag.textContent = ARCHIVE_SETTINGS_LAYOUT_OVERRIDE + ARCHIVE_WORKSPACE_CONFIRM_CSS;
 			document.head.appendChild(tag);
@@ -3707,7 +3707,7 @@ export function startArchiveClient(require: HostRequire) {
 			"archived.notOpenable": "已归档，取消归档后可继续对话",
 			"archives.title": "会话管理",
 			"archives.description": "查找历史，整理当前会话。",
-            "archives.tools": "更多", "archives.filters": "筛选", "archives.activeFilters": "已启用的筛选", "archives.removeFilter": "移除筛选：{name}", "archives.clearFilters": "清除筛选", "archives.resultCount": "{n} 个会话", "archives.idleTool": "整理闲置会话", "archives.stableReleases": "检查 GitHub 稳定版", "archives.localMaintenance": "本地源码维护 · GitHub 稳定版本按需发布",
+            "archives.tools": "更多", "archives.filters": "筛选", "archives.activeFilters": "已启用的筛选", "archives.removeFilter": "移除筛选：{name}", "archives.clearFilters": "清除筛选", "archives.resultCount": "{n} 个会话", "archives.idleTool": "整理闲置会话", "archives.stableReleases": "检查 GitHub 稳定版", "archives.localMaintenance": "由 hxc0624 维护 · 从 GitHub 获取更新",
 			"archives.viewProject": "GitHub",
 			"archives.feedback": "问题反馈",
 			"archives.empty": "暂无已归档会话",
@@ -3868,7 +3868,7 @@ export function startArchiveClient(require: HostRequire) {
 			"archived.notOpenable": "This session is archived. Unarchive it to continue the conversation.",
 			"archives.title": "Session Manager",
 			"archives.description": "Find history and organize your sessions.",
-            "archives.tools": "More", "archives.filters": "Filters", "archives.activeFilters": "Active filters", "archives.removeFilter": "Remove filter: {name}", "archives.clearFilters": "Clear filters", "archives.resultCount": "{n} sessions", "archives.idleTool": "Organize idle sessions", "archives.stableReleases": "Check GitHub stable release", "archives.localMaintenance": "Maintained from local source · GitHub stable releases published as needed",
+            "archives.tools": "More", "archives.filters": "Filters", "archives.activeFilters": "Active filters", "archives.removeFilter": "Remove filter: {name}", "archives.clearFilters": "Clear filters", "archives.resultCount": "{n} sessions", "archives.idleTool": "Organize idle sessions", "archives.stableReleases": "Check GitHub stable release", "archives.localMaintenance": "Maintained by hxc0624 · Updates from GitHub",
 			"archives.viewProject": "GitHub",
 			"archives.feedback": "Issues",
 			"archives.empty": "No archived sessions.",
@@ -4078,8 +4078,8 @@ export function startArchiveClient(require: HostRequire) {
 				en
 			}), "dsh-archive-manager: dictionaries");
 			ctx.effect(() => observePluginUpdate({
-				endpoint: "/api/michengai/dsh-archive-manager/update",
-				packageName: "@michengai/dsh-archive-manager",
+				endpoint: "/api/hxc0624/dsh-session-manager/update",
+				packageName: "@hxc0624/dsh-session-manager",
 				zhName: "会话管理",
 				enName: "Session Manager"
 			}), "dsh-archive-manager: plugin update ui");
@@ -4393,14 +4393,14 @@ export function startArchiveClient(require: HostRequire) {
 		const ensureLegacyWorkspaceCss = () => {
 			if (typeof document === "undefined") return;
 			const sheets = [
-				["@michengai/dsh-archive-manager/Rows.module.css", css$2],
-				["@michengai/dsh-archive-manager/WorkspacePicker.module.css", css$1],
-				["@michengai/dsh-archive-manager/WorkspaceBrowser.module.css", css]
+				["@hxc0624/dsh-session-manager/Rows.module.css", css$2],
+				["@hxc0624/dsh-session-manager/WorkspacePicker.module.css", css$1],
+				["@hxc0624/dsh-session-manager/WorkspaceBrowser.module.css", css]
 			];
 			for (const [id, text] of sheets) {
 				if (document.querySelector("style[data-plugin-css=" + JSON.stringify(id) + "]") !== null) continue;
 				const tag = document.createElement("style");
-				tag.dataset.plugin = "@michengai/dsh-archive-manager";
+				tag.dataset.plugin = "@hxc0624/dsh-session-manager";
 				tag.dataset.pluginCss = id;
 				tag.textContent = text;
 				document.head.appendChild(tag);

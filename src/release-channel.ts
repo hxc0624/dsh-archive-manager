@@ -1,4 +1,4 @@
-// Session Manager releases keep the existing package ID and distribution URLs for installed users.
+// Independent hxc0624 package; retain distribution URLs so existing GitHub links stay valid.
 export const PRODUCT_NAME = "Session Manager";
 export const RELEASE_REPOSITORY = "hxc0624/dsh-archive-manager";
 export const RELEASE_ASSET = "dsh-archive-manager.tgz";

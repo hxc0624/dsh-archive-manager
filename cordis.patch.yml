@@ -5,7 +5,7 @@
 # 归档能力由 ui-workspace-archive-manager 这一条入口装上，停用时卸下。
 # 不要再插入单独的 host 行：插件页可以只关掉那一行，界面还在，诊断就会 404。
 # 自定义侧栏通过优先级覆盖插槽；发布后的安装命令：
-#   dsh plugin --profile web add @michengai/dsh-archive-manager
+#   dsh plugin --profile web add @hxc0624/dsh-session-manager
 #
 # ui-settings-unarchive-sessions：DSH 0.1.6+官方「已归档会话」设置页，只能单条恢复；
 # 禁用后只保留本插件的归档管理入口。旧宿主没有该 id 时补丁被忽略。
@@ -15,4 +15,4 @@
   disabled: false
 - insert:
     - id: ui-workspace-archive-manager
-      name: '@michengai/dsh-archive-manager'
+      name: '@hxc0624/dsh-session-manager'

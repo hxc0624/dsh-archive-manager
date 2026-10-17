@@ -4,7 +4,7 @@ import { copyFile, lstat, mkdir, readFile, readdir, realpath, rm, writeFile } fr
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const PACKAGE_NAME = "@michengai/dsh-archive-manager";
+const PACKAGE_NAME = "@hxc0624/dsh-session-manager";
 const hash = data => createHash("sha256").update(data).digest("hex");
 const within = (root, path) => { const rel = relative(root, path); return rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel); };
 

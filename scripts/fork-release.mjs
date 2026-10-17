@@ -13,7 +13,7 @@ const checksumName = "SHA256SUMS.txt";
 const gh = async (args) => (await exec("gh", args, { windowsHide: true })).stdout;
 
 export function validateRelease(tag, manifest, head, taggedHead) {
-  assert.equal(manifest.name, "@michengai/dsh-archive-manager", "Keep the installed plugin identity");
+  assert.equal(manifest.name, "@hxc0624/dsh-session-manager", "Release the independent hxc0624 plugin identity");
   assert.equal(manifest.private, true, "Session Manager releases must not publish to npm");
   assert.ok(isStableVersion(manifest.version), "Use independent X.Y.Z stable versions for new Session Manager releases");
   assert.equal(tag, `v${manifest.version}`, "Release tag must match package.json");

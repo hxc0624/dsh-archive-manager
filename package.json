@@ -1,8 +1,8 @@
 {
-  "name": "@michengai/dsh-archive-manager",
-  "version": "1.2.1",
+  "name": "@hxc0624/dsh-session-manager",
+  "version": "1.3.0",
   "private": true,
-  "description": "Session Manager（会话管理）：归档检索、批量整理与交互增强。 · Session management, archive search, and interaction enhancements for DeepSeek Harness.",
+  "description": "Session search, archive organization, favorites, and bulk management for DeepSeek Harness.",
   "type": "module",
   "packageManager": "pnpm@11.22.0",
   "engines": {
@@ -144,5 +144,6 @@
     "workspace",
     "nodejs",
     "esm"
-  ]
+  ],
+  "author": "hxc0624"
 }

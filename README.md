@@ -1,6 +1,6 @@
-# Session Manager 1.2.1
+# Session Manager 1.3.0
 
-A community plugin for DeepSeek Harness (DSH), providing session search, archive management, and interaction enhancements. Local source is the primary maintenance copy; GitHub stable releases are published when needed.
+An independently maintained DeepSeek Harness (DSH) plugin by hxc0624 for session search, archives, favorites, and bulk actions. Its package identity is `@hxc0624/dsh-session-manager`, with stable releases distributed from the personal GitHub repository.
 
 [简体中文](README.zh-CN.md) · [Changelog](CHANGELOG.md) · [Stable releases](https://github.com/hxc0624/dsh-archive-manager/releases) · [Issues](https://github.com/hxc0624/dsh-archive-manager/issues)
 
@@ -45,7 +45,7 @@ Use your existing checkout for unpublished local changes. `pnpm typecheck` check
 Sync to an existing Desktop installation:
 
 ```powershell
-pnpm install:local --target "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\@michengai\dsh-archive-manager"
+pnpm install:local --target "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\@hxc0624\dsh-session-manager"
 ```
 
 This builds, backs up replaced files, and verifies each copied file. Backups and receipts are stored in `.browser-verification/local-installs` and can be removed after verification. The command only syncs existing installations; runtime dependency changes require installation through DSH first. Fully exit and reopen DSH afterward.
@@ -58,6 +58,17 @@ To publish, update package.json and both changelogs, run `pnpm release:preflight
 
 ## Compatibility and license
 
-The installed package identity remains `@michengai/dsh-archive-manager`. This customization is based on [MichengAI/dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager) 1.0.16, under [Apache-2.0](LICENSE). Generated files retain third-party license notices.
+Since 1.3.0 the independent package identity is `@hxc0624/dsh-session-manager`. This project is based on [MichengAI/dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager) 1.0.16, under [Apache-2.0](LICENSE). Generated files retain third-party license notices.
+
+## Migrate from the old package
+
+Version 1.3.0 changes the package name. Remove `@michengai/dsh-archive-manager` before installing the new GitHub release so only one plugin runs. Removing the package preserves sessions, archive state, favorites, projection caches, and UI preferences in their existing storage locations.
+
+```powershell
+dsh plugin --profile web remove @michengai/dsh-archive-manager
+dsh plugin --profile web add https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz --registry=https://registry.npmjs.org/
+```
+
+Desktop users must run the installation's `resources/runtime/cli/bin/dsh.cmd` and replace `web` with `desktop`. Reopen DSH afterwards. The old update dialog cannot migrate the package name automatically; use these commands once, then manage subsequent releases from the new plugin.
 
 Integrations should use `workspaceRegistry.searchSessionContent({ sessionIds, query })`; the legacy `searchArchivedContent` entry retains its archived-only semantics. Repair requires an archived session that is not open in any DSH process. Unknown corruption, missing files, and permission issues receive diagnostic guidance. Include host/plugin versions, reproduction steps, and error details when reporting issues.

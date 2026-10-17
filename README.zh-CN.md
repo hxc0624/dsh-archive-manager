@@ -1,6 +1,6 @@
-# 会话管理 · Session Manager 1.2.1
+# 会话管理 · Session Manager 1.3.0
 
-DeepSeek Harness（DSH）的社区插件，提供会话检索、归档整理和交互增强。本地源码作为维护主体，GitHub 按需发布稳定版本。
+由 hxc0624 独立维护的 DeepSeek Harness（DSH）会话管理插件，提供会话检索、归档整理、收藏与批量操作。安装标识为 `@hxc0624/dsh-session-manager`，稳定版本发布在个人 GitHub 仓库。
 
 [English](README.md) · [更新日志](CHANGELOG.zh-CN.md) · [稳定版本](https://github.com/hxc0624/dsh-archive-manager/releases) · [反馈](https://github.com/hxc0624/dsh-archive-manager/issues)
 
@@ -45,7 +45,7 @@ pnpm verify
 同步到已安装的 Desktop 插件：
 
 ```powershell
-pnpm install:local --target "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\@michengai\dsh-archive-manager"
+pnpm install:local --target "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\@hxc0624\dsh-session-manager"
 ```
 
 命令先构建，再备份被覆盖的文件并逐个校验。备份和安装记录位于 `.browser-verification/local-installs`，验证成功后可清理。它只同步现有安装；运行依赖发生变化时需先通过 DSH 安装器安装。完成后完全退出并重新打开 DSH。
@@ -58,6 +58,17 @@ pnpm install:local --target "$env:USERPROFILE\.dsh\profiles\desktop\node_modules
 
 ## 兼容与许可
 
-插件保留安装标识 `@michengai/dsh-archive-manager`。基于 [MichengAI/dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager) 1.0.16 定制，沿用 [Apache-2.0](LICENSE)，并保留生成文件中的第三方许可声明。
+从 1.3.0 起使用独立安装标识 `@hxc0624/dsh-session-manager`。本项目基于 [MichengAI/dsh-archive-manager](https://github.com/MichengAI/dsh-archive-manager) 1.0.16，沿用 [Apache-2.0](LICENSE)，并保留生成文件中的第三方许可声明。
+
+## 从旧包迁移
+
+1.3.0 更换了包名。首次升级请先移除 `@michengai/dsh-archive-manager`，再从本仓库安装新版，避免同时加载两个插件。移除插件仅清理包与启用记录；会话、归档状态、收藏、投影缓存和界面偏好沿用原存储位置。
+
+```powershell
+dsh plugin --profile web remove @michengai/dsh-archive-manager
+dsh plugin --profile web add https://github.com/hxc0624/dsh-archive-manager/releases/latest/download/dsh-archive-manager.tgz --registry=https://registry.npmjs.org/
+```
+
+Desktop 用户须使用安装目录内的 `resources/runtime/cli/bin/dsh.cmd`，并将 `web` 换成 `desktop`。完成后重新打开 DSH；以后可在新版插件中正常检查与安装更新。旧版更新窗口无法自动迁移包名，请使用上述命令完成这一次迁移。
 
 集成检索使用 `workspaceRegistry.searchSessionContent({ sessionIds, query })`；旧入口 `searchArchivedContent` 保持归档范围语义。诊断修复要求会话已归档且未在任何 DSH 进程打开；未知损坏、权限或文件缺失只提供处理建议。遇到问题请附 DSH 与插件版本、复现步骤和错误信息提交反馈。

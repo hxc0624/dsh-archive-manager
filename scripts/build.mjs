@@ -81,7 +81,7 @@ try {
 	const clientSource = clientBundle.outputFiles[0].text;
 	const thirdPartyNotices = await bundledLicenseNotice(clientBundle.metafile);
 	await writeFile(join(stagingDirectory, "client.js"), `window.__ModuleLoader__.load({
-  id: "@michengai/dsh-archive-manager",
+  id: "@hxc0624/dsh-session-manager",
   factory: function(require) {
     globalThis.__dshArchiveReact = require("react");
     globalThis.__dshArchiveJsx = require("react/jsx-runtime");

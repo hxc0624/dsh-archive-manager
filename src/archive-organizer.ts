@@ -28,14 +28,14 @@ export const favoriteStateSchema = {
 
 /** 宿主与客户端使用同一份描述符，防止两端接口漂移。 */
 export function favoriteInvocations() {
-  const codec = (name: string, schema: Schema<unknown>) => ({ mode: "strict", typeSymbol: `@michengai/dsh-archive-manager/types#${name}`, create: () => schema, schema });
+  const codec = (name: string, schema: Schema<unknown>) => ({ mode: "strict", typeSymbol: `@hxc0624/dsh-session-manager/types#${name}`, create: () => schema, schema });
   return ["favoriteSessions", "setSessionFavorite"].map((method) => ({
-    id: `@michengai/dsh-archive-manager#workspaceRegistry/${method}`,
+    id: `@hxc0624/dsh-session-manager#workspaceRegistry/${method}`,
     service: "workspaceRegistry", namespace: "workspaceRegistry", method,
     invocation: { kind: "direct" },
     parameters: method === "favoriteSessions" ? [] : [{ name: "input", wire: "input", source: "json", codec: codec("FavoriteInput", favoriteInputSchema) }],
     result: codec("FavoriteState", favoriteStateSchema),
-    sourceLocation: { file: "@michengai/dsh-archive-manager/lib/workspace.js", line: 1, column: 1 }
+    sourceLocation: { file: "@hxc0624/dsh-session-manager/lib/workspace.js", line: 1, column: 1 }
   }));
 }
 

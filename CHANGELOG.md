@@ -4,6 +4,13 @@
 
 Published release notes are retained below; new versions are added without removing earlier entries.
 
+## 1.3.0 - 2026-10-17
+
+- Adopt the independent package name `@hxc0624/dsh-session-manager` while retaining the Session Manager display name.
+- Update the client module identity, RPC type ownership, update endpoint, and release validation; stable updates remain in hxc0624's GitHub repository.
+- Simplify maintenance and update copy to identify the maintainer, current version, and release source.
+- Preserve existing session, archive, favorite, cache, and preference storage. Follow the one-time migration instructions when replacing the old package to prevent duplicate loading.
+
 ## 1.2.1 - 2026-10-17
 
 - Support DeepSeek Harness 0.2.1-rc.1 with updated compatibility declarations, development dependencies, and lockfile while retaining previously supported releases.
