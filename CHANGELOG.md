@@ -4,6 +4,12 @@
 
 Published release notes are retained below; new versions are added without removing earlier entries.
 
+## 1.2.1 - 2026-10-17
+
+- Support DeepSeek Harness 0.2.1-rc.1 with updated compatibility declarations, development dependencies, and lockfile while retaining previously supported releases.
+- Adapt to the new workspace candidateMatches membership check so archived sessions retain their workspace account when the path index is missing; restore the official implementation when disabled.
+- Pass 165 functional regressions on 0.2.1-rc.1 covering archive, restore, content search, single and batch deletion, plain and compressed JSONL logs, projection caches, and gateway calls.
+
 ## 1.2.0 - 2026-10-11
 
 - Remove test fixtures, local backups, obsolete screenshots and duplicate maintenance notes; retain current source and distribution files.

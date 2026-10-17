@@ -1379,7 +1379,11 @@ var ArchiveWorkspaceRegistry = class extends (WorkspaceRegistry as unknown as Wo
 //#endregion
 const workspaceOverlay = Symbol.for("dsh-archive-manager.workspace-overlay");
 interface WorkspaceOverlayHost {
-	host: { sessionPath(id: string): string | undefined };
+	host: {
+		sessionPath?(id: string): string | undefined;
+		candidateMatches?(id: string, path: string): boolean;
+	};
+	sessionPaths: ReadonlyMap<string, string>;
 	invalidSessionPaths: { has(id: string): boolean };
 	archivedWorkspacePath(sessionId: string): string | undefined;
 	[workspaceOverlay]?: boolean;
@@ -1387,10 +1391,11 @@ interface WorkspaceOverlayHost {
 /** 只保护仍在归档集合里、但路径索引还没编上的记账，避免官方 mutate 把归档会话写丢。 */
 function protectArchivedSessionPath(registry: WorkspaceOverlayHost): () => void {
 	const indexedPath = registry.host.sessionPath;
-	registry.host.sessionPath = (id) => {
-		const path = indexedPath(id);
-		if (path !== undefined) return path;
+	const candidateMatches = registry.host.candidateMatches;
+	const archivedPath = (id: string) => {
 		// 未归档会话仍走官方过滤，不改工作区成员语义。
+		// 已索引到其他目录的会话也不能由旧记账重新挂回。
+		if (registry.sessionPaths.has(id)) return undefined;
 		if (registry.invalidSessionPaths.has(id)) return undefined;
 		try {
 			return registry.archivedWorkspacePath(id);
@@ -1398,8 +1403,18 @@ function protectArchivedSessionPath(registry: WorkspaceOverlayHost): () => void 
 			return undefined;
 		}
 	};
+	// 0.2.1 的工作区成员过滤改用 candidateMatches；旧宿主仍查询 sessionPath。
+	if (typeof candidateMatches === "function") {
+		registry.host.candidateMatches = (id, path) =>
+			candidateMatches.call(registry.host, id, path) || archivedPath(id) === path;
+	}
+	if (typeof indexedPath === "function") {
+		registry.host.sessionPath = (id) =>
+			indexedPath.call(registry.host, id) ?? archivedPath(id);
+	}
 	return () => {
-		registry.host.sessionPath = indexedPath;
+		if (typeof indexedPath === "function") registry.host.sessionPath = indexedPath;
+		if (typeof candidateMatches === "function") registry.host.candidateMatches = candidateMatches;
 	};
 }
 /**

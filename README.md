@@ -1,4 +1,4 @@
-# Session Manager 1.2.0
+# Session Manager 1.2.1
 
 A community plugin for DeepSeek Harness (DSH), providing session search, archive management, and interaction enhancements. Local source is the primary maintenance copy; GitHub stable releases are published when needed.
 
@@ -19,7 +19,7 @@ Content search reads persisted user and assistant text, excluding tool outputs, 
 
 ## Requirements and installation
 
-Supported DSH releases: `0.1.2-rc.1`, `0.1.5-rc.1`–`0.1.5-rc.3`, `0.1.7-rc.1`–`0.1.7-rc.2`, and `0.2.0-rc.1`–`0.2.0-rc.2`. Node.js must satisfy `^22.19.0 || >=24.0.0`; source builds use the pnpm version specified in package.json. Other host versions are outside the current support range.
+Supported DSH releases: `0.1.2-rc.1`, `0.1.5-rc.1`–`0.1.5-rc.3`, `0.1.7-rc.1`–`0.1.7-rc.2`, `0.2.0-rc.1`–`0.2.0-rc.2`, and `0.2.1-rc.1`. Node.js must satisfy `^22.19.0 || >=24.0.0`; source builds use the pnpm version specified in package.json. Other host versions are outside the current support range.
 
 Install a stable version, replacing `web` with your profile:
 
